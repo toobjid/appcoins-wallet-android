@@ -64,7 +64,7 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
     return new Web3jService(web3jProvider);
   }
 
-  @Singleton @Provides Web3jProvider providesWeb3jProvider(OkHttpClient client,
+  @Singleton @Provides Web3jProvider providesWeb3jProvider(@Named("default") OkHttpClient client,
       NetworkInfo networkInfo) {
     return new Web3jProvider(client, networkInfo);
   }
@@ -103,7 +103,7 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
   }
 
   @Singleton @Provides TransactionsNetworkClientType provideBlockExplorerClient(
-      OkHttpClient httpClient, Gson gson, NetworkInfo networkInfo) {
+      @Named("default") OkHttpClient httpClient, Gson gson, NetworkInfo networkInfo) {
     return new TransactionsNetworkClient(httpClient, gson, networkInfo);
   }
 
@@ -116,8 +116,8 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
         inDiskCache, tickerService, web3j, networkInfo, defaultTokenProvider);
   }
 
-  @Singleton @Provides TokenExplorerClientType provideTokenService(OkHttpClient okHttpClient,
-      Gson gson) {
+  @Singleton @Provides TokenExplorerClientType provideTokenService(
+      @Named("default") OkHttpClient okHttpClient, Gson gson) {
     return new EthplorerTokenService(okHttpClient, gson);
   }
 

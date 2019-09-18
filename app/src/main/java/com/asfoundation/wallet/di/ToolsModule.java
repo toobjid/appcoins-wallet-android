@@ -103,6 +103,7 @@ import com.asfoundation.wallet.referrals.ReferralInteractorContract;
 import com.asfoundation.wallet.referrals.SharedPreferencesReferralLocalData;
 import com.asfoundation.wallet.repository.ApproveService;
 import com.asfoundation.wallet.repository.ApproveTransactionValidatorBds;
+import com.asfoundation.wallet.repository.BackendTransactionRepository;
 import com.asfoundation.wallet.repository.BalanceService;
 import com.asfoundation.wallet.repository.BdsBackEndWriter;
 import com.asfoundation.wallet.repository.BdsPendingTransactionService;
@@ -110,7 +111,6 @@ import com.asfoundation.wallet.repository.BdsTransactionService;
 import com.asfoundation.wallet.repository.BuyService;
 import com.asfoundation.wallet.repository.BuyTransactionValidatorBds;
 import com.asfoundation.wallet.repository.CurrencyConversionService;
-import com.asfoundation.wallet.repository.BackendTransactionRepository;
 import com.asfoundation.wallet.repository.ErrorMapper;
 import com.asfoundation.wallet.repository.GasSettingsRepository;
 import com.asfoundation.wallet.repository.GasSettingsRepositoryType;
@@ -144,6 +144,7 @@ import com.asfoundation.wallet.service.AccountWalletService;
 import com.asfoundation.wallet.service.AppsApi;
 import com.asfoundation.wallet.service.BDSAppsApi;
 import com.asfoundation.wallet.service.CampaignService;
+import com.asfoundation.wallet.service.EwtAuthenticationInterceptor;
 import com.asfoundation.wallet.service.LocalCurrencyConversionService;
 import com.asfoundation.wallet.service.RealmManager;
 import com.asfoundation.wallet.service.SmsValidationApi;
@@ -197,6 +198,7 @@ import com.facebook.appevents.AppEventsLogger;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.jakewharton.rxrelay2.BehaviorRelay;
 import dagger.Module;
 import dagger.Provides;
@@ -269,8 +271,35 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         + ")";
   }
 
-  @Singleton @Provides OkHttpClient okHttpClient(@Named("user_agent") String userAgent) {
+  @Singleton @Provides EwtAuthenticationInterceptor providesEwtAuthInterceptor(
+      WalletService walletService) {
+    JsonObject headerJson = new JsonObject();
+    headerJson.addProperty("typ", "EWT");
+    return new EwtAuthenticationInterceptor(walletService, headerJson.toString());
+  }
+
+  /**
+   * This should be the okHttpClient used by default
+   */
+  @Singleton @Provides @Named("default") OkHttpClient providesWeb3jOkHttpClient(
+      @Named("user_agent") String userAgent) {
+    return new OkHttpClient.Builder().addInterceptor(new LogInterceptor())
+        .addInterceptor(new UserAgentInterceptor(userAgent))
+        .connectTimeout(15, TimeUnit.MINUTES)
+        .readTimeout(30, TimeUnit.MINUTES)
+        .writeTimeout(30, TimeUnit.MINUTES)
+        .build();
+  }
+
+  /**
+   * This should be the okHttpClient used when we want to use the ewt_authenticator
+   * At the moment it should be used in the broker, inapp and deeplink apis
+   */
+  @Singleton @Provides @Named("ewt_authenticator") OkHttpClient providesOkHttpClient(
+      @Named("user_agent") String userAgent,
+      EwtAuthenticationInterceptor ewtAuthenticationInterceptor) {
     return new OkHttpClient.Builder().addInterceptor(new UserAgentInterceptor(userAgent))
+        .addInterceptor(ewtAuthenticationInterceptor)
         .addInterceptor(new LogInterceptor())
         .connectTimeout(15, TimeUnit.MINUTES)
         .readTimeout(30, TimeUnit.MINUTES)
@@ -287,7 +316,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return sharedPreferenceRepository;
   }
 
-  @Singleton @Provides TickerService provideTickerService(OkHttpClient httpClient, Gson gson) {
+  @Singleton @Provides TickerService provideTickerService(@Named("default") OkHttpClient httpClient,
+      Gson gson) {
     return new TrustWalletTickerService(httpClient, gson);
   }
 
@@ -578,8 +608,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         countryCodeProvider, addressService, createWalletInteract, findDefaultWalletInteract);
   }
 
-  @Provides @Singleton CountryCodeProvider providesCountryCodeProvider(OkHttpClient client,
-      Gson gson) {
+  @Provides @Singleton CountryCodeProvider providesCountryCodeProvider(
+      @Named("default") OkHttpClient client, Gson gson) {
     IpCountryCodeProvider.IpApi api = new Retrofit.Builder().baseUrl(IpCountryCodeProvider.ENDPOINT)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -622,7 +652,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return new AirdropChainIdMapper(networkInfo);
   }
 
-  @Provides AirdropService provideAirdropService(OkHttpClient client, Gson gson) {
+  @Provides AirdropService provideAirdropService(@Named("default") OkHttpClient client, Gson gson) {
     AirdropService.Api api = new Retrofit.Builder().baseUrl(BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -642,8 +672,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         airdropChainIdMapper);
   }
 
-  @Singleton @Provides AppcoinsApps provideAppcoinsApps(OkHttpClient client, Gson gson) {
-
+  @Singleton @Provides AppcoinsApps provideAppcoinsApps(@Named("default") OkHttpClient client,
+      Gson gson) {
     AppsApi appsApi = new Retrofit.Builder().baseUrl(API_BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -654,7 +684,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .build());
   }
 
-  @Singleton @Provides RemoteRepository.BdsApi provideBdsApi(OkHttpClient client, Gson gson) {
+  @Singleton @Provides RemoteRepository.BdsApi provideBdsApi(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -664,7 +695,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(RemoteRepository.BdsApi.class);
   }
 
-  @Singleton @Provides BdsApiSecondary provideBdsApiSecondary(OkHttpClient client, Gson gson) {
+  @Singleton @Provides BdsApiSecondary provideBdsApiSecondary(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BDS_BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -674,8 +706,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(BdsApiSecondary.class);
   }
 
-  @Singleton @Provides TokenRateService provideTokenRateService(OkHttpClient client,
-      ObjectMapper objectMapper) {
+  @Singleton @Provides TokenRateService provideTokenRateService(
+      @Named("default") OkHttpClient client, ObjectMapper objectMapper) {
     String baseUrl = TokenRateService.CONVERSION_HOST;
     TokenRateService.TokenToFiatApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -687,7 +719,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides LocalCurrencyConversionService provideLocalCurrencyConversionService(
-      OkHttpClient client, ObjectMapper objectMapper) {
+      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
     String baseUrl = LocalCurrencyConversionService.CONVERSION_HOST;
     LocalCurrencyConversionService.TokenToLocalFiatApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -790,8 +822,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return PreferenceManager.getDefaultSharedPreferences(context);
   }
 
-  @Singleton @Provides CampaignService providePoASubmissionService(OkHttpClient client,
-      ObjectMapper objectMapper) {
+  @Singleton @Provides CampaignService providePoASubmissionService(
+      @Named("default") OkHttpClient client, ObjectMapper objectMapper) {
     String baseUrl = CampaignService.SERVICE_HOST;
     CampaignService.CampaignApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -812,7 +844,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         getVersionCode());
   }
 
-  @Provides GamificationApi provideGamificationApi(OkHttpClient client) {
+  @Provides GamificationApi provideGamificationApi(@Named("default") OkHttpClient client) {
     String baseUrl = CampaignService.SERVICE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -822,7 +854,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(GamificationApi.class);
   }
 
-  @Singleton @Provides BackendApi provideBackendApi(OkHttpClient client, Gson gson) {
+  @Singleton @Provides BackendApi provideBackendApi(@Named("default") OkHttpClient client,
+      Gson gson) {
     return new Retrofit.Builder().baseUrl(BuildConfig.BACKEND_HOST)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -844,7 +877,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     };
   }
 
-  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(OkHttpClient client,
+  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(@Named("default") OkHttpClient client,
       ObjectMapper objectMapper) {
     return new Retrofit.Builder().baseUrl("https://ws75.aptoide.com/api/7/")
         .client(client)
@@ -878,8 +911,9 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return list;
   }
 
-  @Singleton @Provides AnalyticsManager provideAnalyticsManager(OkHttpClient okHttpClient,
-      AnalyticsAPI api, Context context, @Named("bi_event_list") List<String> biEventList,
+  @Singleton @Provides AnalyticsManager provideAnalyticsManager(
+      @Named("default") OkHttpClient okHttpClient, AnalyticsAPI api, Context context,
+      @Named("bi_event_list") List<String> biEventList,
       @Named("facebook_event_list") List<String> facebookEventList) {
 
     return new AnalyticsManager.Builder().addLogger(new BackendEventLogger(api), biEventList)
@@ -964,7 +998,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         BuildConfig.DEFAULT_OEM_ADDRESS);
   }
 
-  @Singleton @Provides BdsPartnersApi provideBdsPartnersApi(OkHttpClient client, Gson gson) {
+  @Singleton @Provides BdsPartnersApi provideBdsPartnersApi(@Named("default") OkHttpClient client,
+      Gson gson) {
     String baseUrl = BuildConfig.BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -989,7 +1024,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides BdsShareLinkRepository.BdsShareLinkApi provideBdsShareLinkApi(
-      OkHttpClient client, Gson gson) {
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.CATAPPULT_BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -1005,7 +1040,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides LocalPayementsLinkRepository.DeepLinkApi provideDeepLinkApi(
-      OkHttpClient client, Gson gson) {
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.CATAPPULT_BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -1032,7 +1067,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides OffChainTransactionsRepository providesOffChainTransactionsRepository(
-      OkHttpClient client) {
+      @Named("default") OkHttpClient client) {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -1080,12 +1115,14 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
             .transactionsDao();
     TransactionsRepository localRepository =
         new TransactionsLocalRepository(transactionsDao, sharedPreferences);
-    return new BackendTransactionRepository(networkInfo, accountKeystoreService, defaultTokenProvider,
-        new BlockchainErrorMapper(), nonceObtainer, Schedulers.io(), transactionsNetworkRepository,
-        localRepository, new TransactionMapper(), new CompositeDisposable(), Schedulers.io());
+    return new BackendTransactionRepository(networkInfo, accountKeystoreService,
+        defaultTokenProvider, new BlockchainErrorMapper(), nonceObtainer, Schedulers.io(),
+        transactionsNetworkRepository, localRepository, new TransactionMapper(),
+        new CompositeDisposable(), Schedulers.io());
   }
 
-  @Singleton @Provides SmsValidationApi provideSmsValidationApi(OkHttpClient client, Gson gson) {
+  @Singleton @Provides SmsValidationApi provideSmsValidationApi(
+      @Named("default") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BACKEND_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
