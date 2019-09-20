@@ -37,6 +37,7 @@ import com.asf.wallet.BuildConfig;
 import com.asfoundation.wallet.Airdrop;
 import com.asfoundation.wallet.AirdropService;
 import com.asfoundation.wallet.App;
+import com.asfoundation.wallet.EwtAuthenticatorService;
 import com.asfoundation.wallet.FabricLogger;
 import com.asfoundation.wallet.Logger;
 import com.asfoundation.wallet.advertise.AdvertisingThrowableCodeMapper;
@@ -271,11 +272,15 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         + ")";
   }
 
-  @Singleton @Provides EwtAuthenticationInterceptor providesEwtAuthInterceptor(
-      WalletService walletService) {
+  @Singleton @Provides EwtAuthenticatorService providesEwtAuthService(WalletService walletService) {
     JsonObject headerJson = new JsonObject();
     headerJson.addProperty("typ", "EWT");
-    return new EwtAuthenticationInterceptor(walletService, headerJson.toString());
+    return new EwtAuthenticatorService(walletService, headerJson.toString());
+  }
+
+  @Singleton @Provides EwtAuthenticationInterceptor providesEwtAuthInterceptor(
+      WalletService walletService, EwtAuthenticatorService ewtAuthenticatorService) {
+    return new EwtAuthenticationInterceptor(walletService, ewtAuthenticatorService);
   }
 
   /**
