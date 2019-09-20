@@ -3,7 +3,7 @@ package com.asfoundation.wallet.service
 import android.util.Log
 import com.appcoins.wallet.bdsbilling.WalletService
 import com.asfoundation.wallet.EwtAuthenticatorService
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.Scheduler
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
@@ -16,17 +16,18 @@ import java.io.IOException
  */
 
 class EwtAuthenticationInterceptor(private val walletService: WalletService,
-                                   private val ewtAuthenticatorService: EwtAuthenticatorService) :
+                                   private val ewtAuthenticatorService: EwtAuthenticatorService,
+                                   private val scheduler: Scheduler) :
     Interceptor {
 
   @Throws(IOException::class)
   override fun intercept(chain: Interceptor.Chain): Response {
     val originalRequest = chain.request()
-
+    val currentUnixTime = System.currentTimeMillis() / 1000L
     val ewtAuth = walletService.getWalletAddress()
         .flatMap {
-          ewtAuthenticatorService.getEwtAuthentication(it, System.currentTimeMillis() / 1000L)
-              .subscribeOn(Schedulers.io())
+          ewtAuthenticatorService.getEwtAuthentication(it, currentUnixTime)
+              .subscribeOn(scheduler)
         }
         .blockingGet()
 

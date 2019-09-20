@@ -280,7 +280,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides EwtAuthenticationInterceptor providesEwtAuthInterceptor(
       WalletService walletService, EwtAuthenticatorService ewtAuthenticatorService) {
-    return new EwtAuthenticationInterceptor(walletService, ewtAuthenticatorService);
+    return new EwtAuthenticationInterceptor(walletService, ewtAuthenticatorService,
+        Schedulers.io());
   }
 
   /**
