@@ -15,18 +15,22 @@ class EwtAuthenticatorService(private val walletService: WalletService,
 
   fun getEwtAuthentication(address: String, currentUnixTime: Long): Single<String> {
     return if (shouldBuildEwtAuth(address, currentUnixTime))
-      getPayload(address, currentUnixTime)
-          .flatMap {
-            walletService.signContent(it)
-                .map { signedPayload ->
-                  buildAndSaveEwtString(header.convertToBase64(), it, signedPayload, address,
-                      currentUnixTime)
-                }
-          }
-          .onErrorResumeNext { Single.just("Error") }
+      getNewEwtAuthentication(address, currentUnixTime)
     else {
       Single.just(cachedAuth[address]!!.first)
     }
+  }
+
+  fun getNewEwtAuthentication(address: String, currentUnixTime: Long): Single<String> {
+    return getPayload(address, currentUnixTime)
+        .flatMap {
+          walletService.signContent(it)
+              .map { signedPayload ->
+                buildAndSaveEwtString(header.convertToBase64(), it, signedPayload, address,
+                    currentUnixTime)
+              }
+        }
+        .onErrorResumeNext { Single.just("Error") }
   }
 
   private fun shouldBuildEwtAuth(address: String, currentUnixTime: Long): Boolean {

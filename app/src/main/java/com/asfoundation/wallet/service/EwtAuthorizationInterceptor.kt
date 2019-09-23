@@ -5,8 +5,10 @@ import com.appcoins.wallet.bdsbilling.WalletService
 import com.asfoundation.wallet.EwtAuthenticatorService
 import io.reactivex.Scheduler
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
+import javax.net.ssl.HttpsURLConnection
 
 /**
  *
@@ -24,21 +26,44 @@ class EwtAuthenticationInterceptor(private val walletService: WalletService,
   override fun intercept(chain: Interceptor.Chain): Response {
     val originalRequest = chain.request()
     val currentUnixTime = System.currentTimeMillis() / 1000L
+    var response: Response
     val ewtAuth = walletService.getWalletAddress()
         .flatMap {
           ewtAuthenticatorService.getEwtAuthentication(it, currentUnixTime)
               .subscribeOn(scheduler)
         }
         .blockingGet()
+    response = addEwtAuthentication(ewtAuth, originalRequest, chain)
 
-    if (ewtAuth != "Error") {
+    return handleUnauthorized(response, currentUnixTime, originalRequest, chain)
+  }
+
+  private fun addEwtAuthentication(ewtAuth: String, originalRequest: Request,
+                                   chain: Interceptor.Chain): Response {
+    return if (ewtAuth != "Error") {
       val requestWithEwt = originalRequest.newBuilder()
           .addHeader("{Authorization", "$ewtAuth}")
           .build()
-      return chain.proceed(requestWithEwt)
+      chain.proceed(requestWithEwt)
+    } else {
+      Log.w(EwtAuthenticationInterceptor::class.java.name, "Ewt Authentication failed")
+      chain.proceed(originalRequest)
     }
-    Log.w(EwtAuthenticationInterceptor::class.java.name, "Ewt Authentication failed")
-    return chain.proceed(chain.request())
+  }
+
+  private fun handleUnauthorized(response: Response, currentUnixTime: Long,
+                                 originalRequest: Request, chain: Interceptor.Chain): Response {
+    return if (!response.isSuccessful && response.code() == HttpsURLConnection.HTTP_UNAUTHORIZED) {
+      val ewtAuth = walletService.getWalletAddress()
+          .flatMap {
+            ewtAuthenticatorService.getNewEwtAuthentication(it, currentUnixTime)
+                .subscribeOn(scheduler)
+          }
+          .blockingGet()
+      addEwtAuthentication(ewtAuth, originalRequest, chain)
+    } else {
+      response
+    }
   }
 
 }
