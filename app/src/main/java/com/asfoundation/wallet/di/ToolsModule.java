@@ -280,8 +280,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides EwtAuthenticationInterceptor providesEwtAuthInterceptor(
       WalletService walletService, EwtAuthenticatorService ewtAuthenticatorService) {
-    return new EwtAuthenticationInterceptor(walletService, ewtAuthenticatorService,
-        Schedulers.io());
+    return new EwtAuthenticationInterceptor(walletService, ewtAuthenticatorService);
   }
 
   /**
@@ -299,7 +298,6 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   /**
    * This should be the okHttpClient used when we want to use the ewt_authenticator
-   * At the moment it should be used in the broker, inapp and deeplink apis
    */
   @Singleton @Provides @Named("ewt_authenticator") OkHttpClient providesOkHttpClient(
       @Named("user_agent") String userAgent,
@@ -322,8 +320,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return sharedPreferenceRepository;
   }
 
-  @Singleton @Provides TickerService provideTickerService(@Named("default") OkHttpClient httpClient,
-      Gson gson) {
+  @Singleton @Provides TickerService provideTickerService(
+      @Named("ewt_authenticator") OkHttpClient httpClient, Gson gson) {
     return new TrustWalletTickerService(httpClient, gson);
   }
 
@@ -615,7 +613,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides @Singleton CountryCodeProvider providesCountryCodeProvider(
-      @Named("default") OkHttpClient client, Gson gson) {
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     IpCountryCodeProvider.IpApi api = new Retrofit.Builder().baseUrl(IpCountryCodeProvider.ENDPOINT)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -658,7 +656,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return new AirdropChainIdMapper(networkInfo);
   }
 
-  @Provides AirdropService provideAirdropService(@Named("default") OkHttpClient client, Gson gson) {
+  @Provides AirdropService provideAirdropService(@Named("ewt_authenticator") OkHttpClient client,
+      Gson gson) {
     AirdropService.Api api = new Retrofit.Builder().baseUrl(BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -678,8 +677,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         airdropChainIdMapper);
   }
 
-  @Singleton @Provides AppcoinsApps provideAppcoinsApps(@Named("default") OkHttpClient client,
-      Gson gson) {
+  @Singleton @Provides AppcoinsApps provideAppcoinsApps(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     AppsApi appsApi = new Retrofit.Builder().baseUrl(API_BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -713,7 +712,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides TokenRateService provideTokenRateService(
-      @Named("default") OkHttpClient client, ObjectMapper objectMapper) {
+      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
     String baseUrl = TokenRateService.CONVERSION_HOST;
     TokenRateService.TokenToFiatApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -829,7 +828,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides CampaignService providePoASubmissionService(
-      @Named("default") OkHttpClient client, ObjectMapper objectMapper) {
+      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
     String baseUrl = CampaignService.SERVICE_HOST;
     CampaignService.CampaignApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -850,7 +849,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         getVersionCode());
   }
 
-  @Provides GamificationApi provideGamificationApi(@Named("default") OkHttpClient client) {
+  @Provides GamificationApi provideGamificationApi(
+      @Named("ewt_authenticator") OkHttpClient client) {
     String baseUrl = CampaignService.SERVICE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -860,7 +860,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(GamificationApi.class);
   }
 
-  @Singleton @Provides BackendApi provideBackendApi(@Named("default") OkHttpClient client,
+  @Singleton @Provides BackendApi provideBackendApi(@Named("ewt_authenticator") OkHttpClient client,
       Gson gson) {
     return new Retrofit.Builder().baseUrl(BuildConfig.BACKEND_HOST)
         .client(client)
@@ -883,8 +883,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     };
   }
 
-  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(@Named("default") OkHttpClient client,
-      ObjectMapper objectMapper) {
+  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(
+      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
     return new Retrofit.Builder().baseUrl("https://ws75.aptoide.com/api/7/")
         .client(client)
         .addConverterFactory(JacksonConverterFactory.create(objectMapper))
@@ -918,7 +918,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides AnalyticsManager provideAnalyticsManager(
-      @Named("default") OkHttpClient okHttpClient, AnalyticsAPI api, Context context,
+      @Named("ewt_authenticator") OkHttpClient okHttpClient, AnalyticsAPI api, Context context,
       @Named("bi_event_list") List<String> biEventList,
       @Named("facebook_event_list") List<String> facebookEventList) {
 
@@ -1004,8 +1004,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         BuildConfig.DEFAULT_OEM_ADDRESS);
   }
 
-  @Singleton @Provides BdsPartnersApi provideBdsPartnersApi(@Named("default") OkHttpClient client,
-      Gson gson) {
+  @Singleton @Provides BdsPartnersApi provideBdsPartnersApi(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -1073,7 +1073,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides OffChainTransactionsRepository providesOffChainTransactionsRepository(
-      @Named("default") OkHttpClient client) {
+      @Named("ewt_authenticator") OkHttpClient client) {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -1128,7 +1128,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides SmsValidationApi provideSmsValidationApi(
-      @Named("default") OkHttpClient client, Gson gson) {
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BACKEND_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)

@@ -3,7 +3,6 @@ package com.asfoundation.wallet
 import com.appcoins.wallet.bdsbilling.WalletService
 import com.asfoundation.wallet.util.convertToBase64
 import com.google.gson.JsonObject
-import io.reactivex.Single
 
 
 private const val TTL = 3600
@@ -13,24 +12,22 @@ class EwtAuthenticatorService(private val walletService: WalletService,
 
   private var cachedAuth: MutableMap<String, Pair<String, Long>> = HashMap()
 
-  fun getEwtAuthentication(address: String, currentUnixTime: Long): Single<String> {
+  @Synchronized
+  fun getEwtAuthentication(address: String, currentUnixTime: Long): String {
     return if (shouldBuildEwtAuth(address, currentUnixTime))
       getNewEwtAuthentication(address, currentUnixTime)
     else {
-      Single.just(cachedAuth[address]!!.first)
+      cachedAuth[address]!!.first
     }
   }
 
-  fun getNewEwtAuthentication(address: String, currentUnixTime: Long): Single<String> {
-    return getPayload(address, currentUnixTime)
-        .flatMap {
-          walletService.signContent(it)
-              .map { signedPayload ->
-                buildAndSaveEwtString(header.convertToBase64(), it, signedPayload, address,
-                    currentUnixTime)
-              }
-        }
-        .onErrorResumeNext { Single.just("Error") }
+  @Synchronized
+  fun getNewEwtAuthentication(address: String, currentUnixTime: Long): String {
+    val payload = getPayload(address, currentUnixTime)
+    val signedPayload = walletService.signContent(payload)
+        .blockingGet()
+    return buildAndSaveEwtString(header.convertToBase64(), payload, signedPayload, address,
+        currentUnixTime)
   }
 
   private fun shouldBuildEwtAuth(address: String, currentUnixTime: Long): Boolean {
@@ -49,12 +46,12 @@ class EwtAuthenticatorService(private val walletService: WalletService,
     return ewtString
   }
 
-  private fun getPayload(walletAddress: String, currentUnixTime: Long): Single<String> {
+  private fun getPayload(walletAddress: String, currentUnixTime: Long): String {
     val payloadJson = JsonObject()
     cachedAuth[walletAddress] = Pair("", currentUnixTime)
     payloadJson.addProperty("iss", walletAddress)
     payloadJson.addProperty("exp", currentUnixTime + TTL)
-    return Single.just(payloadJson.toString()
-        .convertToBase64())
+    return payloadJson.toString()
+        .convertToBase64()
   }
 }

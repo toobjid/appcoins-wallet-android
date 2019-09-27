@@ -103,7 +103,7 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
   }
 
   @Singleton @Provides TransactionsNetworkClientType provideBlockExplorerClient(
-      @Named("default") OkHttpClient httpClient, Gson gson, NetworkInfo networkInfo) {
+      @Named("ewt_authenticator") OkHttpClient httpClient, Gson gson, NetworkInfo networkInfo) {
     return new TransactionsNetworkClient(httpClient, gson, networkInfo);
   }
 
@@ -117,7 +117,7 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
   }
 
   @Singleton @Provides TokenExplorerClientType provideTokenService(
-      @Named("default") OkHttpClient okHttpClient, Gson gson) {
+      @Named("ewt_authenticator") OkHttpClient okHttpClient, Gson gson) {
     return new EthplorerTokenService(okHttpClient, gson);
   }
 
