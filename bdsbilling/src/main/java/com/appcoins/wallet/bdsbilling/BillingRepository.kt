@@ -15,34 +15,28 @@ interface BillingRepository {
 
   fun getSkuDetails(packageName: String, skus: List<String>): Single<List<Product>>
 
-  fun getSkuPurchase(packageName: String, skuId: String?, walletAddress: String,
-                     walletSignature: String): Single<Purchase>
+  fun getSkuPurchase(packageName: String, skuId: String?): Single<Purchase>
 
-  fun getSkuTransaction(packageName: String, skuId: String?, walletAddress: String,
-                        walletSignature: String): Single<Transaction>
+  fun getSkuTransaction(packageName: String, skuId: String?): Single<Transaction>
 
-  fun getPurchases(packageName: String, walletAddress: String, walletSignature: String,
-                   type: BillingSupportedType): Single<List<Purchase>>
+  fun getPurchases(packageName: String, type: BillingSupportedType): Single<List<Purchase>>
 
-  fun consumePurchases(packageName: String, purchaseToken: String, walletAddress: String,
-                       walletSignature: String): Single<Boolean>
+  fun consumePurchases(packageName: String, purchaseToken: String): Single<Boolean>
 
-  fun registerAuthorizationProof(id: String, paymentType: String, walletAddress: String,
-                                 walletSignature: String, productName: String?, packageName: String,
-                                 priceValue: BigDecimal,
+  fun registerAuthorizationProof(id: String, paymentType: String, productName: String?,
+                                 packageName: String, priceValue: BigDecimal,
                                  developerWallet: String, storeWallet: String, origin: String,
                                  type: String, oemWallet: String,
                                  developerPayload: String?, callback: String?,
                                  orderReference: String?): Single<String>
 
-  fun registerPaymentProof(paymentId: String, paymentType: String, walletAddress: String,
-                           signedData: String, paymentProof: String): Completable
+  fun registerPaymentProof(paymentId: String, paymentType: String,
+                           paymentProof: String): Completable
 
   fun getPaymentMethods(value: String? = null, currency: String? = null,
                         type: String? = null): Single<List<PaymentMethodEntity>>
 
-  fun getAppcoinsTransaction(uid: String, address: String,
-                             signedContent: String): Single<Transaction>
+  fun getAppcoinsTransaction(uid: String): Single<Transaction>
 
   fun getWallet(packageName: String): Single<String>
 }

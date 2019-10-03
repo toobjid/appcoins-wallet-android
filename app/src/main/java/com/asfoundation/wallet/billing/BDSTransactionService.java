@@ -15,30 +15,27 @@ public final class BDSTransactionService implements TransactionService {
     this.remoteRepository = remoteRepository;
   }
 
-  @Override public Single<String> createTransaction(String address, String signature, String token,
-      String packageName, String payload, String productName, String developerWallet,
-      String storeWallet, String oemWallet, String origin, String walletAddress,
-      BigDecimal priceValue, String priceCurrency, String type, String callback,
+  @Override
+  public Single<String> createTransaction(String token, String packageName, String payload,
+      String productName, String developerWallet, String storeWallet, String oemWallet,
+      String origin, BigDecimal priceValue, String priceCurrency, String type, String callback,
       String orderReference) {
-    return remoteRepository.createAdyenTransaction(origin, walletAddress, signature, token,
-        packageName, priceValue, priceCurrency, productName, type, developerWallet, storeWallet,
-        oemWallet, payload, callback, orderReference)
+    return remoteRepository.createAdyenTransaction(origin, token, packageName, priceValue,
+        priceCurrency, productName, type, developerWallet, storeWallet, oemWallet, payload,
+        callback, orderReference)
         .map(Transaction::getUid)
         .subscribeOn(Schedulers.io());
   }
 
-  @Override
-  public Single<String> getSession(String address, String signature, String transactionUid) {
-    return remoteRepository.getSessionKey(transactionUid, address, signature)
+  @Override public Single<String> getSession(String transactionUid) {
+    return remoteRepository.getSessionKey(transactionUid)
         .map(authorization -> authorization.getData()
             .getSession())
         .subscribeOn(Schedulers.io());
   }
 
-  @Override
-  public Completable finishTransaction(String address, String signature, String transactionUid,
-      String paykey) {
-    return remoteRepository.patchTransaction(transactionUid, address, signature, paykey)
+  @Override public Completable finishTransaction(String transactionUid, String paykey) {
+    return remoteRepository.patchTransaction(transactionUid, paykey)
         .subscribeOn(Schedulers.io());
   }
 }

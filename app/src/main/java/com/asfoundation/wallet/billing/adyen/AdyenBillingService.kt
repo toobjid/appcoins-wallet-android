@@ -54,20 +54,16 @@ class AdyenBillingService(
         .flatMapCompletable { authorized ->
           walletService.getWalletAddress()
               .flatMapCompletable { walletAddress ->
-                walletService.signContent(walletAddress)
-                    .flatMapCompletable { signedContent ->
-                      if (!processingPayment.get()) {
-                        return@flatMapCompletable walletService.signContent(walletAddress)
-                            .flatMapCompletable { Completable.complete() }
-                      } else {
-                        return@flatMapCompletable walletService.signContent(walletAddress)
-                            .flatMapCompletable {
-                              transactionService.finishTransaction(walletAddress, signedContent,
-                                  transactionUid, paykey)
-                            }
-                            .andThen(Completable.fromAction { callRelay(authorized) })
+                if (!processingPayment.get()) {
+                  return@flatMapCompletable walletService.signContent(walletAddress)
+                      .flatMapCompletable { Completable.complete() }
+                } else {
+                  return@flatMapCompletable walletService.signContent(walletAddress)
+                      .flatMapCompletable {
+                        transactionService.finishTransaction(transactionUid, paykey)
                       }
-                    }
+                      .andThen(Completable.fromAction { callRelay(authorized) })
+                }
               }
         }
   }
@@ -98,31 +94,21 @@ class AdyenBillingService(
                                    type: String, callback: String?,
                                    orderReference: String?, appPackageName: String) {
     if (!processingPayment.getAndSet(true)) {
-      this.adyenAuthorization = walletService.getWalletAddress()
-          .flatMap { walletAddress ->
-            walletService.signContent(walletAddress)
-                .flatMap { signedContent ->
-                  adyen.token
-                      .flatMap { token ->
-                        Single.zip<String, String, Single<String>>(
-                            partnerAddressService.getStoreAddressForPackage(appPackageName),
-                            partnerAddressService.getOemAddressForPackage(appPackageName),
-                            BiFunction { storeAddress, oemAddress ->
-                              transactionService.createTransaction(
-                                  walletAddress, signedContent, token, merchantName, payload,
-                                  productName,
-                                  developerAddress, storeAddress, oemAddress, origin, walletAddress,
-                                  priceValue, priceCurrency, type, callback, orderReference)
-                            })
-                            .flatMap { transactionUid -> transactionUid }
-                            .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
-                            .flatMap { transactionUid ->
-                              transactionService.getSession(walletAddress,
-                                  signedContent, transactionUid)
-                            }
-                      }
-                }
-          }
+      this.adyenAuthorization = adyen.token.flatMap { token ->
+        Single.zip<String, String, Single<String>>(
+            partnerAddressService.getStoreAddressForPackage(appPackageName),
+            partnerAddressService.getOemAddressForPackage(appPackageName),
+            BiFunction { storeAddress, oemAddress ->
+              transactionService.createTransaction(token, merchantName, payload,
+                  productName, developerAddress, storeAddress, oemAddress, origin,
+                  priceValue, priceCurrency, type, callback, orderReference)
+            })
+            .flatMap { transactionUid -> transactionUid }
+            .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
+            .flatMap { transactionUid ->
+              transactionService.getSession(transactionUid)
+            }
+      }
           .map { this.newDefaultAdyenAuthorization(it) }
           .blockingGet()
 

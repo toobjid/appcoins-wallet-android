@@ -31,66 +31,34 @@ class BdsBilling(private val repository: BillingRepository,
     return repository.getSkuDetails(merchantName, skus)
   }
 
-  override fun getAppcoinsTransaction(uid: String,
-                                      scheduler: Scheduler): Single<Transaction> {
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          walletService.signContent(address)
-              .observeOn(scheduler)
-              .flatMap { signedContent ->
-                repository.getAppcoinsTransaction(uid, address, signedContent)
-              }
-        }
+  override fun getAppcoinsTransaction(uid: String, scheduler: Scheduler): Single<Transaction> {
+    return repository.getAppcoinsTransaction(uid)
+        .subscribeOn(scheduler)
   }
 
   override fun getSkuTransaction(merchantName: String, sku: String?,
                                  scheduler: Scheduler): Single<Transaction> {
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          walletService.signContent(address)
-              .observeOn(scheduler)
-              .flatMap { signedContent ->
-                repository.getSkuTransaction(merchantName, sku, address, signedContent)
-              }
-        }
+    return repository.getSkuTransaction(merchantName, sku)
+        .subscribeOn(scheduler)
   }
 
   override fun getSkuPurchase(merchantName: String, sku: String?,
                               scheduler: Scheduler): Single<Purchase> {
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          walletService.signContent(address)
-              .observeOn(scheduler)
-              .flatMap { signedContent ->
-                repository.getSkuPurchase(merchantName, sku, address, signedContent)
-              }
-        }
+    return repository.getSkuPurchase(merchantName, sku)
+        .subscribeOn(scheduler)
   }
 
   override fun getPurchases(merchantName: String, type: BillingSupportedType,
                             scheduler: Scheduler): Single<List<Purchase>> {
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          walletService.signContent(address)
-              .observeOn(scheduler)
-              .flatMap { signedContent ->
-                repository.getPurchases(merchantName, address, signedContent,
-                    type)
-              }
-        }
+    return repository.getPurchases(merchantName, type)
+        .subscribeOn(scheduler)
         .onErrorReturn { ArrayList() }
   }
 
   override fun consumePurchases(merchantName: String, purchaseToken: String,
                                 scheduler: Scheduler): Single<Boolean> {
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          walletService.signContent(address)
-              .observeOn(scheduler)
-              .flatMap { signedContent ->
-                repository.consumePurchases(merchantName, purchaseToken, address, signedContent)
-              }
-        }
+    return repository.consumePurchases(merchantName, purchaseToken)
+        .subscribeOn(scheduler)
         .onErrorReturn { false }
   }
 

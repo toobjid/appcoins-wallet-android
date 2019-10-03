@@ -62,20 +62,22 @@ class AppcoinsRewardsTest {
     `when`(remoteApi.getBalance(USER_ADDRESS)).thenReturn(
         Single.just(BackendApi.RewardBalanceResponse(BALANCE)))
 
-    `when`(remoteApi.pay(USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE, BDS_ORIGIN, SKU, TYPE,
-        DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS, PACKAGE_NAME, null, null, null)).thenReturn(
+    `when`(
+        remoteApi.pay(PRICE, BDS_ORIGIN, SKU, TYPE, DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS,
+            PACKAGE_NAME, null, null, null)).thenReturn(
         Single.just(com.appcoins.wallet.bdsbilling.repository.entity.Transaction(UID,
             com.appcoins.wallet.bdsbilling.repository.entity.Transaction.Status.COMPLETED,
             Gateway.unknown(), "0x32453134", "orderReference", null, "")))
 
-    `when`(remoteApi.pay(USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE, UNITY_ORIGIN, SKU, TYPE,
-        DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS, PACKAGE_NAME, null, null, null)).thenReturn(
+    `when`(
+        remoteApi.pay(PRICE, UNITY_ORIGIN, SKU, TYPE, DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS,
+            PACKAGE_NAME, null, null, null)).thenReturn(
         Single.just(com.appcoins.wallet.bdsbilling.repository.entity.Transaction(UID,
             com.appcoins.wallet.bdsbilling.repository.entity.Transaction.Status.COMPLETED,
             Gateway.unknown(), "0x32453134", "orderReference", null, "")))
 
-    `when`(remoteApi.pay(USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE, null, SKU, TYPE,
-        DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS, PACKAGE_NAME, null, null, null)).thenReturn(
+    `when`(remoteApi.pay(PRICE, null, SKU, TYPE, DEVELOPER_ADDRESS, STORE_ADDRESS, OEM_ADDRESS,
+        PACKAGE_NAME, null, null, null)).thenReturn(
         Single.just(com.appcoins.wallet.bdsbilling.repository.entity.Transaction(UID,
             com.appcoins.wallet.bdsbilling.repository.entity.Transaction.Status.COMPLETED,
             Gateway.unknown(), "0x32453134", "orderReference", null, "")))

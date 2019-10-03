@@ -8,33 +8,24 @@ import java.math.BigDecimal
 
 class BdsAppcoinsRewardsRepository(private val remoteRepository: RemoteRepository) :
     AppcoinsRewardsRepository {
-  override fun sendCredits(toAddress: String, walletAddress: String, signature: String,
-                           amount: BigDecimal,
-                           origin: String, type: String,
+  override fun sendCredits(toAddress: String, amount: BigDecimal, origin: String, type: String,
                            packageName: String): Single<AppcoinsRewardsRepository.Status> {
-    return remoteRepository.sendCredits(toAddress, walletAddress, signature, amount, origin, type,
-        packageName).toSingle { AppcoinsRewardsRepository.Status.SUCCESS }.onErrorReturn { map(it) }
+    return remoteRepository.sendCredits(toAddress, amount, origin, type, packageName)
+        .toSingle { AppcoinsRewardsRepository.Status.SUCCESS }
+        .onErrorReturn { map(it) }
   }
 
   override fun getBalance(address: String): Single<BigDecimal> {
-    return remoteRepository.getBalance(address).map { it.balance }
+    return remoteRepository.getBalance(address)
+        .map { it.balance }
   }
 
-  override fun pay(walletAddress: String, signature: String,
-                   amount: BigDecimal,
-                   origin: String?,
-                   sku: String?,
-                   type: String,
-                   developerAddress: String,
-                   storeAddress: String,
-                   oemAddress: String,
-                   packageName: String,
-                   payload: String?,
-                   callback: String?,
+  override fun pay(amount: BigDecimal, origin: String?, sku: String?, type: String,
+                   developerAddress: String, storeAddress: String, oemAddress: String,
+                   packageName: String, payload: String?, callback: String?,
                    orderReference: String?): Single<Transaction> {
-    return remoteRepository.pay(walletAddress, signature, amount, origin, sku,
-        type, developerAddress, storeAddress, oemAddress, packageName, payload, callback,
-        orderReference)
+    return remoteRepository.pay(amount, origin, sku, type, developerAddress, storeAddress,
+        oemAddress, packageName, payload, callback, orderReference)
   }
 
   private fun map(throwable: Throwable): AppcoinsRewardsRepository.Status {

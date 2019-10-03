@@ -25,21 +25,19 @@ public class CreditsRemoteRepository
   }
 
   @NotNull @Override
-  public Single<Transaction> pay(@NotNull String walletAddress, @NotNull String signature,
-      @NotNull BigDecimal amount, @Nullable String origin, @Nullable String sku,
-      @NotNull String type, @NotNull String developerAddress, @NotNull String storeAddress,
-      @NotNull String oemAddress, @NotNull String packageName, @Nullable String payload,
-      @Nullable String callback, @Nullable String orderReference) {
+  public Single<Transaction> pay(@NotNull BigDecimal amount, @Nullable String origin,
+      @Nullable String sku, @NotNull String type, @NotNull String developerAddress,
+      @NotNull String storeAddress, @NotNull String oemAddress, @NotNull String packageName,
+      @Nullable String payload, @Nullable String callback, @Nullable String orderReference) {
     return remoteRepository.registerAuthorizationProof(origin, type, oemAddress, null,
-        "appcoins_credits", walletAddress, signature, sku, packageName, amount, developerAddress,
-        storeAddress, payload, callback, orderReference);
+        "appcoins_credits", sku, packageName, amount, developerAddress, storeAddress, payload,
+        callback, orderReference);
   }
 
   @NotNull @Override
-  public Completable sendCredits(@NotNull String toWallet, @NotNull String walletAddress,
-      @NotNull String signature, @NotNull BigDecimal amount, @NotNull String origin,
-      @NotNull String type, @NotNull String packageName) {
-    return remoteRepository.transferCredits(toWallet, origin, type, "appcoins_credits",
-        walletAddress, signature, packageName, amount);
+  public Completable sendCredits(@NotNull String toWallet, @NotNull BigDecimal amount,
+      @NotNull String origin, @NotNull String type, @NotNull String packageName) {
+    return remoteRepository.transferCredits(toWallet, origin, type, "appcoins_credits", packageName,
+        amount);
   }
 }

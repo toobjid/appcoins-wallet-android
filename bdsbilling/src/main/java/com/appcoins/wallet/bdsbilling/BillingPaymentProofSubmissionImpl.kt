@@ -12,7 +12,6 @@ import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
 class BillingPaymentProofSubmissionImpl internal constructor(
-    private val walletService: WalletService,
     private val repository: BillingRepository,
     private val networkScheduler: Scheduler,
     private val transactionIdsFromApprove: MutableMap<String, String>,
@@ -40,14 +39,9 @@ class BillingPaymentProofSubmissionImpl internal constructor(
 
   override fun registerPaymentProof(paymentId: String, paymentProof: String,
                                     paymentType: String): Completable {
-    return walletService.getWalletAddress().observeOn(networkScheduler)
-        .flatMapCompletable { walletAddress ->
-          walletService.signContent(walletAddress).observeOn(networkScheduler)
-              .flatMapCompletable { signedData ->
-                repository.registerPaymentProof(paymentId, paymentType, walletAddress, signedData,
-                    paymentProof)
-              }
-        }.andThen(Completable.fromAction { transactionIdsFromBuy[paymentProof] = paymentId })
+    return repository.registerPaymentProof(paymentId, paymentType, paymentProof)
+        .andThen(Completable.fromAction { transactionIdsFromBuy[paymentProof] = paymentId })
+        .subscribeOn(networkScheduler)
   }
 
   override fun registerAuthorizationProof(id: String, paymentType: String,
@@ -62,14 +56,10 @@ class BillingPaymentProofSubmissionImpl internal constructor(
                                           developerPayload: String?,
                                           callback: String?,
                                           orderReference: String?): Single<String> {
-    return walletService.getWalletAddress().observeOn(networkScheduler).flatMap { walletAddress ->
-      walletService.signContent(walletAddress).observeOn(networkScheduler).flatMap { signedData ->
-        repository.registerAuthorizationProof(id, paymentType, walletAddress, signedData,
-            productName, packageName, priceValue, developerWallet, storeWallet, origin, type,
-            oemWallet, developerPayload, callback, orderReference)
-
-      }
-    }
+    return repository.registerAuthorizationProof(id, paymentType, productName, packageName,
+        priceValue, developerWallet, storeWallet, origin, type,
+        oemWallet, developerPayload, callback, orderReference)
+        .subscribeOn(networkScheduler)
   }
 
   override fun saveTransactionId(key: String) {
@@ -101,17 +91,14 @@ class BillingPaymentProofSubmissionImpl internal constructor(
         apply { this.walletService = walletService }
 
     fun build(): BillingPaymentProofSubmissionImpl {
-      return walletService?.let { walletService ->
-        api?.let { api ->
-          bdsApiSecondary?.let { bdsApiSecondary ->
-            BillingPaymentProofSubmissionImpl(
-                walletService, BdsRepository(
-                RemoteRepository(api, BdsApiResponseMapper(), bdsApiSecondary)), networkScheduler,
-                ConcurrentHashMap(),
-                ConcurrentHashMap())
-          } ?: throw IllegalArgumentException("BdsApiSecondary not defined")
-        } ?: throw IllegalArgumentException("BdsApi not defined")
-      } ?: throw IllegalArgumentException("WalletService not defined")
+      return api?.let { api ->
+        bdsApiSecondary?.let { bdsApiSecondary ->
+          BillingPaymentProofSubmissionImpl(BdsRepository(
+              RemoteRepository(api, BdsApiResponseMapper(), bdsApiSecondary)), networkScheduler,
+              ConcurrentHashMap(),
+              ConcurrentHashMap())
+        } ?: throw IllegalArgumentException("BdsApiSecondary not defined")
+      } ?: throw IllegalArgumentException("BdsApi not defined")
     }
   }
 

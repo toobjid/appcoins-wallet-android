@@ -24,7 +24,8 @@ class AppcoinsRewards(
   }
 
   fun getBalance(): Single<BigDecimal> {
-    return walletService.getWalletAddress().flatMap { getBalance(it) }
+    return walletService.getWalletAddress()
+        .flatMap { getBalance(it) }
   }
 
   fun pay(amount: BigDecimal,
@@ -43,39 +44,36 @@ class AppcoinsRewards(
   }
 
   fun start() {
-    cache.all.observeOn(scheduler).flatMapCompletable {
-      Observable.fromIterable(it)
-          .filter { transaction -> transaction.status == Transaction.Status.PENDING }
-          .doOnNext { transaction ->
-            cache.saveSync(getKey(transaction),
-                Transaction(transaction, Transaction.Status.PROCESSING))
-          }
-          .flatMapCompletable { transaction ->
-            walletService.getWalletAddress()
-                .flatMapCompletable { walletAddress ->
-                  walletService.signContent(walletAddress).flatMap { signature ->
-                    repository.pay(walletAddress, signature, transaction.amount,
-                        getOrigin(transaction), transaction.sku, transaction.type,
-                        transaction.developerAddress, transaction.storeAddress,
-                        transaction.oemAddress, transaction.packageName, transaction.payload,
-                        transaction.callback, transaction.orderReference)
-
-                  }
-                      .flatMapCompletable { transaction1 ->
-                        waitTransactionCompletion(transaction1).andThen {
-                          val tx = Transaction(transaction, Transaction.Status.COMPLETED)
-                          tx.txId = transaction1.hash
-                          cache.saveSync(getKey(tx), tx)
-                        }
+    cache.all.observeOn(scheduler)
+        .flatMapCompletable {
+          Observable.fromIterable(it)
+              .filter { transaction -> transaction.status == Transaction.Status.PENDING }
+              .doOnNext { transaction ->
+                cache.saveSync(getKey(transaction),
+                    Transaction(transaction, Transaction.Status.PROCESSING))
+              }
+              .flatMapCompletable { transaction ->
+                repository.pay(transaction.amount, getOrigin(transaction),
+                    transaction.sku, transaction.type,
+                    transaction.developerAddress, transaction.storeAddress,
+                    transaction.oemAddress, transaction.packageName,
+                    transaction.payload,
+                    transaction.callback, transaction.orderReference)
+                    .flatMapCompletable { transaction1 ->
+                      waitTransactionCompletion(transaction1).andThen {
+                        val tx = Transaction(transaction, Transaction.Status.COMPLETED)
+                        tx.txId = transaction1.hash
+                        cache.saveSync(getKey(tx), tx)
                       }
-                }
-                .onErrorResumeNext {
-                  it.printStackTrace()
-                  cache.save(getKey(transaction),
-                      Transaction(transaction, errorMapper.map(it)))
-                }
-          }
-    }.subscribe()
+                    }
+                    .onErrorResumeNext {
+                      it.printStackTrace()
+                      cache.save(getKey(transaction),
+                          Transaction(transaction, errorMapper.map(it)))
+                    }
+              }
+        }
+        .subscribe()
   }
 
   private fun getOrigin(
@@ -87,11 +85,13 @@ class AppcoinsRewards(
     return Observable.interval(0, 5, TimeUnit.SECONDS, scheduler)
         .timeInterval()
         .switchMap {
-          billing.getAppcoinsTransaction(createdTransaction.uid, scheduler).toObservable()
+          billing.getAppcoinsTransaction(createdTransaction.uid, scheduler)
+              .toObservable()
         }
         .takeUntil { pendingTransaction ->
           pendingTransaction.status != Status.PROCESSING
-        }.ignoreElements()
+        }
+        .ignoreElements()
 
   }
 
@@ -107,12 +107,7 @@ class AppcoinsRewards(
 
   fun sendCredits(toWallet: String, amount: BigDecimal,
                   packageName: String): Single<AppcoinsRewardsRepository.Status> {
-    return walletService.getWalletAddress()
-        .flatMap { walletAddress ->
-          walletService.signContent(walletAddress).flatMap { signature ->
-            repository.sendCredits(toWallet, walletAddress, signature, amount, "BDS", "TRANSFER",
-                packageName)
-          }
-        }
+    return repository.sendCredits(toWallet, amount, "BDS",
+        "TRANSFER", packageName)
   }
 }

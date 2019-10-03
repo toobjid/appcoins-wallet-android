@@ -6,13 +6,12 @@ import java.math.BigDecimal;
 
 public interface TransactionService {
 
-  Single<String> createTransaction(String address, String signature, String token,
-      String packageName, String payload, String productName, String developerWallet,
-      String storeWallet, String oemWallet, String origin, String walletAddress,
-      BigDecimal priceValue, String priceCurrency, String type, String callback,
+  Single<String> createTransaction(String token, String packageName, String payload,
+      String productName, String developerWallet, String storeWallet, String oemWallet,
+      String origin, BigDecimal priceValue, String priceCurrency, String type, String callback,
       String orderReference);
 
-  Single<String> getSession(String address, String signature, String transactionUid);
+  Single<String> getSession(String transactionUid);
 
-  Completable finishTransaction(String address, String signature, String transactionUid, String paykey);
+  Completable finishTransaction(String transactionUid, String paykey);
 }

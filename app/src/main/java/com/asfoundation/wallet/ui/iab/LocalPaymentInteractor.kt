@@ -12,7 +12,7 @@ import com.asfoundation.wallet.billing.purchase.InAppDeepLinkRepository
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.functions.Function3
+import io.reactivex.functions.BiFunction
 
 class LocalPaymentInteractor(private val deepLinkRepository: InAppDeepLinkRepository,
                              private val walletService: WalletService,
@@ -28,20 +28,16 @@ class LocalPaymentInteractor(private val deepLinkRepository: InAppDeepLinkReposi
                      callbackUrl: String?, orderReference: String?,
                      payload: String?): Single<String> {
 
-    return walletService.getWalletAddress()
-        .flatMap { address ->
-          Single.zip(
-              walletService.signContent(address),
-              partnerAddressService.getStoreAddressForPackage(domain),
-              partnerAddressService.getOemAddressForPackage(domain),
-              Function3 { signature: String, storeAddress: String, oemAddress: String ->
-                DeepLinkInformation(signature, storeAddress, oemAddress)
-              })
-              .flatMap {
-                deepLinkRepository.getDeepLink(domain, skuId, address, it.signature, originalAmount,
-                    originalCurrency, paymentMethod, developerAddress, it.storeAddress,
-                    it.oemAddress, callbackUrl, orderReference, payload)
-              }
+    return Single.zip(
+        partnerAddressService.getStoreAddressForPackage(domain),
+        partnerAddressService.getOemAddressForPackage(domain),
+        BiFunction { storeAddress: String, oemAddress: String ->
+          DeepLinkInformation(storeAddress, oemAddress)
+        })
+        .flatMap {
+          deepLinkRepository.getDeepLink(domain, skuId, originalAmount, originalCurrency,
+              paymentMethod, developerAddress, it.storeAddress, it.oemAddress, callbackUrl,
+              orderReference, payload)
         }
   }
 
@@ -74,6 +70,5 @@ class LocalPaymentInteractor(private val deepLinkRepository: InAppDeepLinkReposi
     inAppPurchaseInteractor.savePreSelectedPaymentMethod(paymentMethod)
   }
 
-  private data class DeepLinkInformation(val signature: String, val storeAddress: String,
-                                         val oemAddress: String)
+  private data class DeepLinkInformation(val storeAddress: String, val oemAddress: String)
 }
