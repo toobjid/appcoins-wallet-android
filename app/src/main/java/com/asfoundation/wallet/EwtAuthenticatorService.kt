@@ -23,10 +23,11 @@ class EwtAuthenticatorService(private val walletService: WalletService,
 
   @Synchronized
   fun getNewEwtAuthentication(address: String, currentUnixTime: Long): String {
-    val payload = getPayload(address, currentUnixTime)
+    val payload = replaceInvalidCharacters(getPayload(address, currentUnixTime))
     val signedPayload = walletService.signContent(payload)
         .blockingGet()
-    return buildAndSaveEwtString(header.convertToBase64(), payload, signedPayload, address,
+    return buildAndSaveEwtString(replaceInvalidCharacters(header.convertToBase64()), payload,
+        signedPayload, address,
         currentUnixTime)
   }
 
@@ -41,20 +42,15 @@ class EwtAuthenticatorService(private val walletService: WalletService,
   private fun buildAndSaveEwtString(header: String, payload: String,
                                     signedPayload: String, address: String,
                                     currentUnixTime: Long): String {
-    var ewtString = "Bearer $header.$payload.$signedPayload"
-    ewtString = replaceInvalidCharacters(ewtString)
+    val ewtString = "Bearer $header.$payload.$signedPayload"
     cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL)
     return ewtString
   }
 
   private fun replaceInvalidCharacters(ewtString: String): String {
-    var modifiedEwt = ewtString.replace("==.", ".")
+    return ewtString.replace("=", "")
         .replace("+", "-")
         .replace("/", "_")
-    if (modifiedEwt.endsWith("==")) {
-      modifiedEwt = ewtString.substring(0, modifiedEwt.length - 2)
-    }
-    return modifiedEwt
   }
 
   private fun getPayload(walletAddress: String, currentUnixTime: Long): String {
