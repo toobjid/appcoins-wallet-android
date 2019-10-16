@@ -38,10 +38,8 @@ class MyLevelFragment : DaggerFragment(), MyLevelView {
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
-    if (context !is GamificationView) {
-      throw IllegalArgumentException(
-          HowItWorksFragment::class.java.simpleName + " needs to be attached to a " + GamificationView::class.java.simpleName)
-    }
+    require(
+        context is GamificationView) { HowItWorksFragment::class.java.simpleName + " needs to be attached to a " + GamificationView::class.java.simpleName }
     gamificationView = context
   }
 
@@ -86,14 +84,14 @@ class MyLevelFragment : DaggerFragment(), MyLevelView {
     }
 
     for (value in bonus) {
-      val newLevel = bonus.indexOf(value)
-      val isCurrentLevel = newLevel == level
+      val levelIndex = bonus.indexOf(value)
+      val isCurrentLevel = levelIndex == level
       val bonusLabel = if (isCurrentLevel) {
         R.string.gamification_level_bonus
       } else {
         R.string.gamification_how_table_b2
       }
-      gamification_progress_bar.setLevelBonus(level,
+      gamification_progress_bar.setLevelBonus(levelIndex,
           getString(bonusLabel, gamification_progress_bar.formatLevelInfo(value)))
     }
   }
@@ -131,21 +129,21 @@ class MyLevelFragment : DaggerFragment(), MyLevelView {
 
   private fun setLevelIdleAnimation(level: Int) {
     when (level) {
-      0 -> gamification_current_level_animation.setMinAndMaxFrame(30, 150)
-      1 -> gamification_current_level_animation.setMinAndMaxFrame(210, 330)
-      2 -> gamification_current_level_animation.setMinAndMaxFrame(390, 510)
-      3 -> gamification_current_level_animation.setMinAndMaxFrame(570, 690)
-      4 -> gamification_current_level_animation.setMinAndMaxFrame(750, 870)
+      0 -> gamification_current_level_animation?.setMinAndMaxFrame(30, 150)
+      1 -> gamification_current_level_animation?.setMinAndMaxFrame(210, 330)
+      2 -> gamification_current_level_animation?.setMinAndMaxFrame(390, 510)
+      3 -> gamification_current_level_animation?.setMinAndMaxFrame(570, 690)
+      4 -> gamification_current_level_animation?.setMinAndMaxFrame(750, 870)
     }
   }
 
   private fun setLevelTransitionAnimation(toLevel: Int) {
     when (toLevel) {
-      0 -> gamification_current_level_animation.setMinAndMaxFrame(0, 30)
-      1 -> gamification_current_level_animation.setMinAndMaxFrame(30, 210)
-      2 -> gamification_current_level_animation.setMinAndMaxFrame(210, 390)
-      3 -> gamification_current_level_animation.setMinAndMaxFrame(390, 570)
-      4 -> gamification_current_level_animation.setMinAndMaxFrame(570, 750)
+      0 -> gamification_current_level_animation?.setMinAndMaxFrame(0, 30)
+      1 -> gamification_current_level_animation?.setMinAndMaxFrame(30, 210)
+      2 -> gamification_current_level_animation?.setMinAndMaxFrame(210, 390)
+      3 -> gamification_current_level_animation?.setMinAndMaxFrame(390, 570)
+      4 -> gamification_current_level_animation?.setMinAndMaxFrame(570, 750)
     }
   }
 

@@ -1,13 +1,20 @@
 package com.asfoundation.wallet.di;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import androidx.room.Room;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 import cm.aptoide.analytics.AnalyticsManager;
 import com.appcoins.wallet.appcoins.rewards.AppcoinsRewards;
 import com.appcoins.wallet.appcoins.rewards.repository.BdsAppcoinsRewardsRepository;
@@ -34,6 +41,7 @@ import com.appcoins.wallet.permissions.Permissions;
 import com.asf.appcoins.sdk.contractproxy.AppCoinsAddressProxyBuilder;
 import com.asf.appcoins.sdk.contractproxy.AppCoinsAddressProxySdk;
 import com.asf.wallet.BuildConfig;
+import com.asf.wallet.R;
 import com.asfoundation.wallet.Airdrop;
 import com.asfoundation.wallet.AirdropService;
 import com.asfoundation.wallet.App;
@@ -62,6 +70,7 @@ import com.asfoundation.wallet.billing.partners.AddressService;
 import com.asfoundation.wallet.billing.partners.BdsPartnersApi;
 import com.asfoundation.wallet.billing.partners.InstallerService;
 import com.asfoundation.wallet.billing.partners.InstallerSourceService;
+import com.asfoundation.wallet.billing.partners.OemIdExtractorService;
 import com.asfoundation.wallet.billing.partners.PartnerAddressService;
 import com.asfoundation.wallet.billing.partners.PartnerWalletAddressService;
 import com.asfoundation.wallet.billing.partners.WalletAddressService;
@@ -128,7 +137,6 @@ import com.asfoundation.wallet.repository.SignDataStandardNormalizer;
 import com.asfoundation.wallet.repository.SmsValidationRepositoryType;
 import com.asfoundation.wallet.repository.TokenRepositoryType;
 import com.asfoundation.wallet.repository.TrackTransactionService;
-import com.asfoundation.wallet.repository.TransactionLocalSource;
 import com.asfoundation.wallet.repository.TransactionMapper;
 import com.asfoundation.wallet.repository.TransactionRepositoryType;
 import com.asfoundation.wallet.repository.TransactionsDao;
@@ -151,7 +159,6 @@ import com.asfoundation.wallet.service.RealmManager;
 import com.asfoundation.wallet.service.SmsValidationApi;
 import com.asfoundation.wallet.service.TickerService;
 import com.asfoundation.wallet.service.TokenRateService;
-import com.asfoundation.wallet.service.TransactionsNetworkClientType;
 import com.asfoundation.wallet.service.TrustWalletTickerService;
 import com.asfoundation.wallet.topup.TopUpInteractor;
 import com.asfoundation.wallet.transactions.TransactionsAnalytics;
@@ -192,7 +199,6 @@ import com.asfoundation.wallet.util.DeviceInfo;
 import com.asfoundation.wallet.util.EIPTransactionParser;
 import com.asfoundation.wallet.util.LogInterceptor;
 import com.asfoundation.wallet.util.OneStepTransactionParser;
-import com.asfoundation.wallet.util.TransactionIdHelper;
 import com.asfoundation.wallet.util.TransferParser;
 import com.asfoundation.wallet.util.UserAgentInterceptor;
 import com.facebook.appevents.AppEventsLogger;
@@ -228,12 +234,11 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.asfoundation.wallet.AirdropService.BASE_URL;
 import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
 @Module class ToolsModule {
-
-  private final TransactionIdHelper transactionIdHelper = new TransactionIdHelper();
 
   @Provides Context provideContext(App application) {
     return application.getApplicationContext();
@@ -460,7 +465,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return new AsfInAppPurchaseInteractor(inAppPurchaseService, defaultWalletInteract,
         gasSettingsInteract, new BigDecimal(BuildConfig.PAYMENT_GAS_LIMIT), parser,
         billingMessagesMapper, billing, new ExternalBillingSerializer(), currencyConversionService,
-        bdsTransactionService, Schedulers.io(), transactionIdHelper);
+        bdsTransactionService, Schedulers.io());
   }
 
   @Singleton @Provides @Named("ASF_IN_APP_INTERACTOR")
@@ -472,7 +477,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return new AsfInAppPurchaseInteractor(inAppPurchaseService, defaultWalletInteract,
         gasSettingsInteract, new BigDecimal(BuildConfig.PAYMENT_GAS_LIMIT), parser,
         billingMessagesMapper, billing, new ExternalBillingSerializer(), currencyConversionService,
-        bdsTransactionService, Schedulers.io(), transactionIdHelper);
+        bdsTransactionService, Schedulers.io());
   }
 
   @Singleton @Provides InAppPurchaseInteractor provideDualInAppPurchaseInteractor(
@@ -605,11 +610,12 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       @Named("MAX_NUMBER_PROOF_COMPONENTS") int maxNumberProofComponents,
       CountryCodeProvider countryCodeProvider, AddressService addressService,
       CreateWalletInteract createWalletInteract,
-      FindDefaultWalletInteract findDefaultWalletInteract) {
+      FindDefaultWalletInteract findDefaultWalletInteract, CampaignInteract campaignInteract) {
     return new ProofOfAttentionService(new MemoryCache<>(BehaviorSubject.create(), new HashMap<>()),
         BuildConfig.APPLICATION_ID, hashCalculator, new CompositeDisposable(), proofWriter,
         Schedulers.computation(), maxNumberProofComponents, new BackEndErrorMapper(), disposables,
-        countryCodeProvider, addressService, createWalletInteract, findDefaultWalletInteract);
+        countryCodeProvider, addressService, createWalletInteract, findDefaultWalletInteract,
+        campaignInteract);
   }
 
   @Provides @Singleton CountryCodeProvider providesCountryCodeProvider(
@@ -828,15 +834,15 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides CampaignService providePoASubmissionService(
-      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
+      @Named("ewt_authenticator") OkHttpClient client) {
     String baseUrl = CampaignService.SERVICE_HOST;
     CampaignService.CampaignApi api = new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
-        .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+        .addConverterFactory(GsonConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .build()
         .create(CampaignService.CampaignApi.class);
-    return new CampaignService(api, BuildConfig.VERSION_CODE);
+    return new CampaignService(api, BuildConfig.VERSION_CODE, Schedulers.io());
   }
 
   @Provides Gamification provideGamification(PromotionsRepository promotionsRepository) {
@@ -990,9 +996,9 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides AddressService providesAddressService(InstallerService installerService,
-      WalletAddressService addressService) {
+      WalletAddressService addressService, OemIdExtractorService oemIdExtractorService) {
     return new PartnerAddressService(installerService, addressService,
-        new DeviceInfo(Build.MANUFACTURER, Build.MODEL));
+        new DeviceInfo(Build.MANUFACTURER, Build.MODEL), oemIdExtractorService);
   }
 
   @Singleton @Provides InstallerService providesInstallerService(Context context) {
@@ -1077,7 +1083,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS", Locale.US);
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
     objectMapper.setDateFormat(df);
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -1090,12 +1096,12 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
     return new OffChainTransactionsRepository(
         retrofit.create(OffChainTransactionsRepository.TransactionsApi.class),
-        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSS", Locale.US));
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US));
   }
 
   @Provides OffChainTransactions providesOffChainTransactions(
       OffChainTransactionsRepository repository, TransactionsMapper mapper) {
-    return new OffChainTransactions(repository, mapper, getVersionCode(), Schedulers.io());
+    return new OffChainTransactions(repository, mapper, getVersionCode());
   }
 
   private String getVersionCode() {
@@ -1110,13 +1116,31 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides TransactionRepositoryType provideTransactionRepository(
       NetworkInfo networkInfo, AccountKeystoreService accountKeystoreService,
-      TransactionsNetworkClientType blockExplorerClient, TransactionLocalSource inDiskCache,
       DefaultTokenProvider defaultTokenProvider, MultiWalletNonceObtainer nonceObtainer,
-      OffChainTransactions transactionsNetworkRepository, @NotNull TransactionsMapper mapper,
-      Context context, SharedPreferences sharedPreferences) {
+      OffChainTransactions transactionsNetworkRepository, Context context,
+      SharedPreferences sharedPreferences) {
+    final Migration MIGRATION_1_2 = new Migration(1, 2) {
+      @Override public void migrate(@NonNull SupportSQLiteDatabase database) {
+        database.execSQL("CREATE TABLE IF NOT EXISTS TransactionEntityCopy (transactionId TEXT NOT "
+            + "NULL, relatedWallet TEXT NOT NULL, approveTransactionId TEXT, type TEXT NOT "
+            + "NULL, timeStamp INTEGER NOT NULL, processedTime INTEGER NOT NULL, status "
+            + "TEXT NOT NULL, value TEXT NOT NULL, `from` TEXT NOT NULL, `to` TEXT NOT NULL, "
+            + "currency TEXT, operations TEXT, sourceName TEXT, description TEXT, "
+            + "iconType TEXT, uri TEXT, PRIMARY KEY(transactionId, relatedWallet))");
+        database.execSQL("INSERT INTO TransactionEntityCopy (transactionId, relatedWallet, "
+            + "approveTransactionId, type, timeStamp, processedTime, status, value, `from`, `to`,"
+            + " currency, operations, sourceName, description, iconType, uri) SELECT "
+            + "transactionId, relatedWallet,approveTransactionId, type, timeStamp, processedTime,"
+            + " status, value, `from`, `to`, currency, operations, sourceName, description, "
+            + "iconType, uri FROM TransactionEntity");
+        database.execSQL("DROP TABLE TransactionEntity");
+        database.execSQL("ALTER TABLE TransactionEntityCopy RENAME TO TransactionEntity");
+      }
+    };
     TransactionsDao transactionsDao =
         Room.databaseBuilder(context.getApplicationContext(), TransactionsDatabase.class,
             "transactions_database")
+            .addMigrations(MIGRATION_1_2)
             .build()
             .transactionsDao();
     TransactionsRepository localRepository =
@@ -1159,8 +1183,46 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides CampaignInteract provideCampaignInteract(CampaignService campaignService,
-      WalletService walletService, CreateWalletInteract createWalletInteract) {
+      WalletService walletService, CreateWalletInteract createWalletInteract,
+      FindDefaultWalletInteract findDefaultWalletInteract) {
     return new CampaignInteract(campaignService, walletService, createWalletInteract,
-        new AdvertisingThrowableCodeMapper());
+        new AdvertisingThrowableCodeMapper(), findDefaultWalletInteract);
+  }
+
+  @Singleton @Provides NotificationManager provideNotificationManager(Context context) {
+    return (NotificationManager) context.getApplicationContext()
+        .getSystemService(NOTIFICATION_SERVICE);
+  }
+
+  @Singleton @Provides @Named("heads_up")
+  NotificationCompat.Builder provideHeadsUpNotificationBuilder(Context context,
+      NotificationManager notificationManager) {
+    NotificationCompat.Builder builder;
+    String channelId = "notification_channel_heads_up_id";
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      CharSequence channelName = "Notification channel";
+      int importance = NotificationManager.IMPORTANCE_HIGH;
+      NotificationChannel notificationChannel =
+          new NotificationChannel(channelId, channelName, importance);
+      builder = new NotificationCompat.Builder(context, channelId);
+
+      notificationManager.createNotificationChannel(notificationChannel);
+    } else {
+      builder = new NotificationCompat.Builder(context, channelId);
+      builder.setVibrate(new long[0]);
+    }
+    return builder.setContentTitle(context.getString(R.string.app_name))
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setPriority(NotificationCompat.PRIORITY_MAX)
+        .setAutoCancel(true)
+        .setOngoing(false);
+  }
+
+  @Singleton @Provides OemIdExtractorService provideOemIdExtractorService(Context context) {
+    return new OemIdExtractorService(context);
+  }
+
+  @Singleton @Provides PackageManager providePackageManager(Context context) {
+    return context.getPackageManager();
   }
 }

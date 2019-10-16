@@ -14,6 +14,7 @@ import com.asf.wallet.R
 import com.asfoundation.wallet.interact.FindDefaultWalletInteract
 import com.asfoundation.wallet.interact.SmsValidationInteract
 import com.asfoundation.wallet.referrals.ReferralInteractorContract
+import com.asfoundation.wallet.wallet_validation.DeleteKeyListener
 import com.asfoundation.wallet.wallet_validation.PasteTextWatcher
 import com.asfoundation.wallet.wallet_validation.ValidationInfo
 import com.jakewharton.rxbinding2.view.RxView
@@ -118,7 +119,6 @@ class CodeValidationFragment : DaggerFragment(),
 
   override fun onResume() {
     super.onResume()
-
     focusAndShowKeyboard(code_1.code)
   }
 
@@ -151,6 +151,12 @@ class CodeValidationFragment : DaggerFragment(),
     code_4.code.addTextChangedListener(PasteTextWatcher(inputTexts, clipboard, 3))
     code_5.code.addTextChangedListener(PasteTextWatcher(inputTexts, clipboard, 4))
     code_6.code.addTextChangedListener(PasteTextWatcher(inputTexts, clipboard, 5))
+    code_1.code.setOnKeyListener(DeleteKeyListener(inputTexts, 0))
+    code_2.code.setOnKeyListener(DeleteKeyListener(inputTexts, 1))
+    code_3.code.setOnKeyListener(DeleteKeyListener(inputTexts, 2))
+    code_4.code.setOnKeyListener(DeleteKeyListener(inputTexts, 3))
+    code_5.code.setOnKeyListener(DeleteKeyListener(inputTexts, 4))
+    code_6.code.setOnKeyListener(DeleteKeyListener(inputTexts, 5))
   }
 
   override fun clearUI() {
@@ -271,14 +277,15 @@ class CodeValidationFragment : DaggerFragment(),
     validate_code_animation.playAnimation()
   }
 
-  override fun showReferralEligible(currency: String, pendingAmount: String) {
+  override fun showReferralEligible(currency: String, maxAmount: String, minAmount: String) {
     walletValidationView?.showLastStepAnimation()
     content.visibility = View.GONE
     animation_validating_code.visibility = View.GONE
     referral_status.visibility = View.VISIBLE
     referral_status_title.setText(R.string.referral_verification_confirmation_title)
     referral_status_body.text =
-        getString(R.string.referral_verification_confirmation_body, currency + pendingAmount)
+        getString(R.string.referral_verification_confirmation_body,
+            currency + maxAmount, currency + minAmount)
     referral_status_animation.setAnimation(R.raw.referral_invited)
     referral_status_animation.playAnimation()
   }
@@ -333,12 +340,8 @@ class CodeValidationFragment : DaggerFragment(),
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
-
-    if (context !is WalletValidationView) {
-      throw IllegalStateException(
-          "CodeValidationFragment must be attached to Wallet Validation activity")
-    }
-
+    check(
+        context is WalletValidationView) { "CodeValidationFragment must be attached to Wallet Validation activity" }
     walletValidationView = context
   }
 
@@ -350,7 +353,7 @@ class CodeValidationFragment : DaggerFragment(),
   override fun hideKeyboard() {
     val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
     imm?.hideSoftInputFromWindow(fragmentContainer.windowToken, 0)
-    content.requestFocus()
+    code_6.clearFocus()
   }
 
   companion object {
