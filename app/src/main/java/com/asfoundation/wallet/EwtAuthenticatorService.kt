@@ -15,28 +15,25 @@ class EwtAuthenticatorService(private val walletService: WalletService,
 
   private var cachedAuth: MutableMap<String, Pair<String, Long>> = HashMap()
 
-  /**
-   * @param address adrees of the wallet requesting the ewt token
-   * @param currentUnixTime current unix time in seconds at which the token is being requested
-   * @return ewt token string, either a new one or a cached one if it's valid
-   */
   @Synchronized
-  fun getEwtAuthentication(address: String, currentUnixTime: Long): String {
-    return if (shouldBuildEwtAuth(address, currentUnixTime))
-      getNewEwtAuthentication(address, currentUnixTime)
+  fun getEwtAuthentication(address: String): String {
+    return if (shouldBuildEwtAuth(address))
+      getNewEwtAuthentication(address)
     else {
       cachedAuth[address]!!.first
     }
   }
 
   @Synchronized
-  fun getNewEwtAuthentication(address: String, currentUnixTime: Long): String {
+  fun getNewEwtAuthentication(address: String): String {
+    val currentUnixTime = System.currentTimeMillis() / 1000L
     val ewtString = buildEwtString(address, currentUnixTime)
     cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL)
     return ewtString
   }
 
-  private fun shouldBuildEwtAuth(address: String, currentUnixTime: Long): Boolean {
+  private fun shouldBuildEwtAuth(address: String): Boolean {
+    val currentUnixTime = System.currentTimeMillis() / 1000L
     return !cachedAuth.containsKey(address) || hasExpired(currentUnixTime,
         cachedAuth[address]?.second)
   }

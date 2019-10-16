@@ -22,13 +22,12 @@ class EwtAuthenticationInterceptor(private val walletService: WalletService,
   @Throws(IOException::class)
   override fun intercept(chain: Interceptor.Chain): Response {
     val originalRequest = chain.request()
-    val currentUnixTime = System.currentTimeMillis() / 1000L
     val address = walletService.getWalletAddress()
         .blockingGet()
-    val ewtAuth = ewtAuthenticatorService.getEwtAuthentication(address, currentUnixTime)
+    val ewtAuth = ewtAuthenticatorService.getEwtAuthentication(address)
     val response = addEwtAuthentication(ewtAuth, originalRequest, chain)
 
-    return handleUnauthorized(response, currentUnixTime, originalRequest, chain)
+    return handleUnauthorized(response, originalRequest, chain)
   }
 
   private fun addEwtAuthentication(ewtAuth: String, originalRequest: Request,
@@ -44,12 +43,12 @@ class EwtAuthenticationInterceptor(private val walletService: WalletService,
     }
   }
 
-  private fun handleUnauthorized(response: Response, currentUnixTime: Long,
-                                 originalRequest: Request, chain: Interceptor.Chain): Response {
+  private fun handleUnauthorized(response: Response, originalRequest: Request,
+                                 chain: Interceptor.Chain): Response {
     return if (!response.isSuccessful && response.code() == HttpsURLConnection.HTTP_UNAUTHORIZED) {
       val address = walletService.getWalletAddress()
           .blockingGet()
-      val ewtAuth = ewtAuthenticatorService.getNewEwtAuthentication(address, currentUnixTime)
+      val ewtAuth = ewtAuthenticatorService.getNewEwtAuthentication(address)
       addEwtAuthentication(ewtAuth, originalRequest, chain)
     } else {
       response
