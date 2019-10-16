@@ -22,7 +22,7 @@
   <string name="close">Закрыть</string>
   <string name="title_activity_settings">Параметры</string>
   <string name="network_label">Сеть</string>
-  <string name="credits">Информация</string>
+  <string name="wallet_credits">Информация</string>
   <string name="label_new">Новое</string>
   <string name="low_storage_error">Недостаточно места для хранения</string>
   <string name="no_camera_permission_title">Разрешение использовать камеру</string>

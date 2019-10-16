@@ -22,7 +22,7 @@
   <string name="close">बंद करा</string>
   <string name="title_activity_settings">सेटिंग्ज</string>
   <string name="network_label">नेटवर्क</string>
-  <string name="credits">क्रेडीट्स</string>
+  <string name="wallet_credits">क्रेडीट्स</string>
   <string name="label_new">नविन</string>
   <string name="low_storage_error">पुरेसे स्टोरेज नाही</string>
   <string name="no_camera_permission_title">कॅमेराची परवानगी</string>

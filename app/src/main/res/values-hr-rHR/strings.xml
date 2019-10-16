@@ -22,7 +22,7 @@
   <string name="close">Zatvori</string>
   <string name="title_activity_settings">Postavke</string>
   <string name="network_label">Mreža</string>
-  <string name="credits">Credits</string>
+  <string name="wallet_credits">Credits</string>
   <string name="label_new">New</string>
   <string name="low_storage_error">Not enough storage space</string>
   <string name="no_camera_permission_title">Camera Permission</string>

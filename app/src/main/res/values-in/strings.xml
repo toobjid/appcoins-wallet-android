@@ -22,7 +22,7 @@
   <string name="close">Tutup</string>
   <string name="title_activity_settings">Pengaturan</string>
   <string name="network_label">Jaringan</string>
-  <string name="credits">Kredit</string>
+  <string name="wallet_credits">Kredit</string>
   <string name="label_new">Baru</string>
   <string name="low_storage_error">Ruang penyimpanan tidak cukup</string>
   <string name="no_camera_permission_title">Izin Kamera</string>

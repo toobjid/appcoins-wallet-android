@@ -146,6 +146,8 @@ import com.asfoundation.wallet.repository.TrustPasswordStore;
 import com.asfoundation.wallet.repository.WalletRepositoryType;
 import com.asfoundation.wallet.repository.WatchedTransactionService;
 import com.asfoundation.wallet.repository.Web3jProvider;
+import com.asfoundation.wallet.repository.entity.TokensDao;
+import com.asfoundation.wallet.repository.entity.TokensRoomDatabase;
 import com.asfoundation.wallet.router.GasSettingsRouter;
 import com.asfoundation.wallet.service.AccountKeystoreService;
 import com.asfoundation.wallet.service.AccountWalletService;
@@ -185,6 +187,7 @@ import com.asfoundation.wallet.ui.iab.LocalPaymentAnalytics;
 import com.asfoundation.wallet.ui.iab.LocalPaymentInteractor;
 import com.asfoundation.wallet.ui.iab.PaymentMethodsMapper;
 import com.asfoundation.wallet.ui.iab.RewardsManager;
+import com.asfoundation.wallet.ui.iab.database.AppCoinsOperationDao;
 import com.asfoundation.wallet.ui.iab.database.AppCoinsOperationDatabase;
 import com.asfoundation.wallet.ui.iab.raiden.MultiWalletNonceObtainer;
 import com.asfoundation.wallet.ui.iab.raiden.NonceObtainerFactory;
@@ -609,6 +612,13 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
             "appcoins_operations_data")
             .build()
             .appCoinsOperationDao(), new AppCoinsOperationMapper());
+  }
+
+  @Singleton @Provides TokensDao appCoinsOperationDao(Context context) {
+    return Room.databaseBuilder(context.getApplicationContext(), TokensRoomDatabase.class,
+        "tokens_database")
+        .build()
+        .tokensDao();
   }
 
   @Provides OperationSources provideOperationSources(

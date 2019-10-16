@@ -22,7 +22,7 @@
   <string name="close">بستن</string>
   <string name="title_activity_settings">تنظیمات</string>
   <string name="network_label">شبکه</string>
-  <string name="credits">اعتبارات</string>
+  <string name="wallet_credits">اعتبارات</string>
   <string name="label_new">جدید</string>
   <string name="low_storage_error">فضای ذخیره سازی کافی نیست</string>
   <string name="no_camera_permission_title">اجازه دوربین</string>

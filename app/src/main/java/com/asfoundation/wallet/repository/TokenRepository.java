@@ -240,16 +240,13 @@ public class TokenRepository implements TokenRepositoryType {
 
   private Completable updateTokens(NetworkInfo network, Wallet wallet) {
     return Single.zip(fetchFromNetworkSource(network, wallet),
-        extractFromTransactions(network, wallet), localSource.fetchAllTokens(network, wallet),
-        (fromNetTokens, fromTrxTokens, cachedTokens) -> {
+         localSource.fetchAllTokens(network, wallet),
+        (fromNetTokens, fromTrxTokens) -> {
           final Set<String> oldTokensIndex = new HashSet<>();
           final List<Token> zip = new ArrayList<>();
           zip.addAll(Arrays.asList(fromNetTokens));
           zip.addAll(Arrays.asList(fromTrxTokens));
           final List<Token> newTokens = new ArrayList<>();
-          for (Token cachedToken : cachedTokens) {
-            oldTokensIndex.add(cachedToken.tokenInfo.address);
-          }
           for (int i = zip.size() - 1; i > -1; i--) {
             if (!oldTokensIndex.contains(zip.get(i).tokenInfo.address)) {
               newTokens.add(zip.get(i));

@@ -22,7 +22,7 @@
   <string name="close">Tutup</string>
   <string name="title_activity_settings">Tetapan</string>
   <string name="network_label">Rangkaian</string>
-  <string name="credits">Kredit</string>
+  <string name="wallet_credits">Kredit</string>
   <string name="label_new">Baharu</string>
   <string name="low_storage_error">Tidak cukup ruang simpanan</string>
   <string name="no_camera_permission_title">Kebenaran Kamera</string>

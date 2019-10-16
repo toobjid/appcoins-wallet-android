@@ -22,7 +22,7 @@
   <string name="close">Затвори</string>
   <string name="title_activity_settings">Настройки</string>
   <string name="network_label">Мрежа</string>
-  <string name="credits">Кредити</string>
+  <string name="wallet_credits">Кредити</string>
   <string name="label_new">Ново</string>
   <string name="low_storage_error">Няма достатъчно място за съхранение</string>
   <string name="no_camera_permission_title">Разрешение за камера</string>

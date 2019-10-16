@@ -22,7 +22,7 @@
   <string name="close">إغلاق</string>
   <string name="title_activity_settings">الإعدادات</string>
   <string name="network_label">الشبكة</string>
-  <string name="credits">الأرصدة</string>
+  <string name="wallet_credits">الأرصدة</string>
   <string name="label_new">جديد</string>
   <string name="low_storage_error">لا توجد مساحة كافية للتخزين</string>
   <string name="no_camera_permission_title">تفعيل إذن الكاميرا</string>

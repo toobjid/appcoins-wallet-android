@@ -22,7 +22,7 @@
   <string name="close">ပိတ္မည္</string>
   <string name="title_activity_settings">ဆက္တင္</string>
   <string name="network_label">ကြန္ရက္</string>
-  <string name="credits">ခရက္ဒစ္မ်ား</string>
+  <string name="wallet_credits">ခရက္ဒစ္မ်ား</string>
   <string name="label_new">အသစ္</string>
   <string name="low_storage_error">သိမ္းဆည္းရန္ေနရာ မလံုေလာက္ပါ</string>
   <string name="no_camera_permission_title">ကင္မရာ ခြင့္ျပဳခ်က္</string>

@@ -12,7 +12,7 @@ import com.asfoundation.wallet.repository.SmsValidationRepositoryType;
 import com.asfoundation.wallet.repository.TokenLocalSource;
 import com.asfoundation.wallet.repository.TokenRepository;
 import com.asfoundation.wallet.repository.TokenRepositoryType;
-import com.asfoundation.wallet.repository.TokensRealmSource;
+import com.asfoundation.wallet.repository.TokensRoomSource;
 import com.asfoundation.wallet.repository.TrackPendingTransactionService;
 import com.asfoundation.wallet.repository.TrackTransactionService;
 import com.asfoundation.wallet.repository.TransactionLocalSource;
@@ -21,6 +21,7 @@ import com.asfoundation.wallet.repository.WalletRepository;
 import com.asfoundation.wallet.repository.WalletRepositoryType;
 import com.asfoundation.wallet.repository.Web3jProvider;
 import com.asfoundation.wallet.repository.Web3jService;
+import com.asfoundation.wallet.repository.entity.TokensDao;
 import com.asfoundation.wallet.service.AccountKeystoreService;
 import com.asfoundation.wallet.service.EthplorerTokenService;
 import com.asfoundation.wallet.service.KeyStoreFileManager;
@@ -121,8 +122,8 @@ import static com.asfoundation.wallet.C.ROPSTEN_NETWORK_NAME;
     return new EthplorerTokenService(okHttpClient, gson);
   }
 
-  @Singleton @Provides TokenLocalSource provideRealmTokenSource(RealmManager realmManager) {
-    return new TokensRealmSource(realmManager);
+  @Singleton @Provides TokenLocalSource provideRealmTokenSource( TokensDao roomDatabase) {
+    return new TokensRoomSource(roomDatabase);
   }
 
   @Singleton @Provides SmsValidationRepositoryType provideSmsValidationRepository(

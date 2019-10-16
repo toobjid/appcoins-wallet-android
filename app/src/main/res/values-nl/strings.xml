@@ -22,7 +22,7 @@
   <string name="close">Sluiten</string>
   <string name="title_activity_settings">Instellingen</string>
   <string name="network_label">Netwerk</string>
-  <string name="credits">Credits</string>
+  <string name="wallet_credits">Credits</string>
   <string name="label_new">Nieuw</string>
   <string name="low_storage_error">Er is onvoldoende opslagruimte</string>
   <string name="no_camera_permission_title">Toestemming voor camera</string>

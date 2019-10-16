@@ -22,7 +22,7 @@
   <string name="close">বন্ধ</string>
   <string name="title_activity_settings">সেটিংস</string>
   <string name="network_label">নেটওয়ার্ক</string>
-  <string name="credits">ক্রেডিটসমূহ</string>
+  <string name="wallet_credits">ক্রেডিটসমূহ</string>
   <string name="label_new">New</string>
   <string name="low_storage_error">পর্যাপ্ত সংরক্ষণযোগ্য জায়গা নেই</string>
   <string name="no_camera_permission_title">Camera Permission</string>

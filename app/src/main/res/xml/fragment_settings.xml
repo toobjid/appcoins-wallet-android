@@ -107,14 +107,14 @@
 
   <PreferenceCategory
       android:layout="@layout/preference_category_layout"
-      android:title="@string/credits"
+      android:title="@string/wallet_credits"
       app:allowDividerAbove="false">
     <Preference
         android:icon="@drawable/ic_settings_credits"
         android:iconSpaceReserved="true"
         android:key="pref_credits"
         android:layout="@layout/preference_without_summary_layout"
-        android:title="@string/credits" />
+        android:title="@string/wallet_credits" />
   </PreferenceCategory>
   <Preference
       android:icon="@drawable/ic_settings_version"

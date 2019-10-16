@@ -22,7 +22,7 @@
   <string name="close">关闭</string>
   <string name="title_activity_settings">设置</string>
   <string name="network_label">网络</string>
-  <string name="credits">制作组</string>
+  <string name="wallet_credits">制作组</string>
   <string name="label_new">新</string>
   <string name="low_storage_error">存储空间不足</string>
   <string name="no_camera_permission_title">相机权限</string>

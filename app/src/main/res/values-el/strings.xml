@@ -22,7 +22,7 @@
   <string name="close">Κλείσιμο</string>
   <string name="title_activity_settings">Ρυθμίσεις</string>
   <string name="network_label">Δίκτυο</string>
-  <string name="credits">Σχετικά με εμάς</string>
+  <string name="wallet_credits">Σχετικά με εμάς</string>
   <string name="label_new">Νέο</string>
   <string name="low_storage_error">Ο αποθηκευτικός χώρος δεν είναι επαρκής</string>
   <string name="no_camera_permission_title">Δικαίωμα Κάμερας</string>

@@ -22,7 +22,7 @@
   <string name="close">Schließen</string>
   <string name="title_activity_settings">Einstellungen</string>
   <string name="network_label">Netzwerk</string>
-  <string name="credits">Das Team</string>
+  <string name="wallet_credits">Das Team</string>
   <string name="label_new">Neu</string>
   <string name="low_storage_error">Nicht genügend Speicherplatz</string>
   <string name="no_camera_permission_title">Kamera-Berechtigung</string>

@@ -22,7 +22,7 @@
   <string name="close">Zamknij</string>
   <string name="title_activity_settings">Ustawienia</string>
   <string name="network_label">Sieć</string>
-  <string name="credits">Kredyty</string>
+  <string name="wallet_credits">Kredyty</string>
   <string name="label_new">Nowość</string>
   <string name="low_storage_error">Nie ma wystarczająco dużo miejsca</string>
   <string name="no_camera_permission_title">Zezwolenie na używanie aparatu</string>

@@ -22,7 +22,7 @@
   <string name="close">Închide</string>
   <string name="title_activity_settings">Setări</string>
   <string name="network_label">Reţea</string>
-  <string name="credits">Credite</string>
+  <string name="wallet_credits">Credite</string>
   <string name="label_new">Nou</string>
   <string name="low_storage_error">Spațiu de stocare insuficient</string>
   <string name="no_camera_permission_title">Permisiune cameră foto</string>

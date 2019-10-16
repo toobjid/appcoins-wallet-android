@@ -22,7 +22,7 @@
   <string name="close">Zatvori</string>
   <string name="title_activity_settings">Podešavanja</string>
   <string name="network_label">Mreža</string>
-  <string name="credits">Autori</string>
+  <string name="wallet_credits">Autori</string>
   <string name="label_new">Novo</string>
   <string name="low_storage_error">Nema dovoljno prostora u memoriji</string>
   <string name="no_camera_permission_title">Dozvola za kameru</string>
