@@ -5,10 +5,9 @@ import com.asfoundation.wallet.util.convertToBase64
 import com.google.gson.JsonObject
 
 /**
- * Represents the time until we need to request another ewt token.
- * It's represented in seconds
- * **/
-private const val TTL = 3600
+ * Variable representing in seconds the time to live interval of the authentication token.
+ **/
+private const val TTL_IN_SECONDS = 3600
 
 class EwtAuthenticatorService(private val walletService: WalletService,
                               private val header: String) {
@@ -28,7 +27,7 @@ class EwtAuthenticatorService(private val walletService: WalletService,
   fun getNewEwtAuthentication(address: String): String {
     val currentUnixTime = System.currentTimeMillis() / 1000L
     val ewtString = buildEwtString(address, currentUnixTime)
-    cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL)
+    cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL_IN_SECONDS)
     return ewtString
   }
 
@@ -54,7 +53,7 @@ class EwtAuthenticatorService(private val walletService: WalletService,
     val payloadJson = JsonObject()
     cachedAuth[walletAddress] = Pair("", currentUnixTime)
     payloadJson.addProperty("iss", walletAddress)
-    payloadJson.addProperty("exp", currentUnixTime + TTL)
+    payloadJson.addProperty("exp", currentUnixTime + TTL_IN_SECONDS)
     return payloadJson.toString()
         .convertToBase64()
   }
