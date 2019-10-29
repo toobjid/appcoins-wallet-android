@@ -52,7 +52,6 @@ import com.asfoundation.wallet.AirdropService;
 import com.asfoundation.wallet.AirdropService.Api;
 import com.asfoundation.wallet.App;
 import com.asfoundation.wallet.EwtAuthenticatorService;
-import com.asfoundation.wallet.FabricLogger;
 import com.asfoundation.wallet.FlurryLogger;
 import com.asfoundation.wallet.Logger;
 import com.asfoundation.wallet.advertise.AdvertisingThrowableCodeMapper;
@@ -166,8 +165,8 @@ import com.asfoundation.wallet.service.AccountWalletService;
 import com.asfoundation.wallet.service.AppsApi;
 import com.asfoundation.wallet.service.BDSAppsApi;
 import com.asfoundation.wallet.service.CampaignService;
-import com.asfoundation.wallet.service.EwtAuthenticationInterceptor;
 import com.asfoundation.wallet.service.CampaignService.CampaignApi;
+import com.asfoundation.wallet.service.EwtAuthenticationInterceptor;
 import com.asfoundation.wallet.service.LocalCurrencyConversionService;
 import com.asfoundation.wallet.service.LocalCurrencyConversionService.TokenToLocalFiatApi;
 import com.asfoundation.wallet.service.RealmManager;
@@ -277,8 +276,10 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
     return "AppCoins_Wallet/"
         + BuildConfig.VERSION_NAME
-        + " (Linux; Android " + VERSION.RELEASE.replaceAll(";", " ")
-        + "; " + VERSION.SDK_INT
+        + " (Linux; Android "
+        + VERSION.RELEASE.replaceAll(";", " ")
+        + "; "
+        + VERSION.SDK_INT
         + "; "
         + Build.MODEL.replaceAll(";", " ")
         + " Build/"
@@ -651,8 +652,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides @Singleton AppcoinsOperationsDataSaver provideInAppPurchaseDataSaver(Context context,
-      List<OperationDataSource> list,
-      AppCoinsOperationRepository appCoinsOperationRepository) {
+      List<OperationDataSource> list, AppCoinsOperationRepository appCoinsOperationRepository) {
     return new AppcoinsOperationsDataSaver(list, appCoinsOperationRepository,
         new AppInfoProvider(context, new ImageSaver(context.getFilesDir() + "/app_icons/")),
         Schedulers.io(), new CompositeDisposable());
@@ -715,8 +715,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .build());
   }
 
-  @Singleton @Provides BdsApi provideBdsApi(
-      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
+  @Singleton @Provides BdsApi provideBdsApi(@Named("ewt_authenticator") OkHttpClient client,
+      Gson gson) {
     String baseUrl = BuildConfig.BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -1092,8 +1092,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     return new TopUpValuesService(topUpValuesApi, responseMapper);
   }
 
-  @Singleton @Provides TopUpValuesApi providesTopUpValuesApi(OkHttpClient client,
-      Gson gson) {
+  @Singleton @Provides TopUpValuesApi providesTopUpValuesApi(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BASE_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
@@ -1222,7 +1222,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides CampaignInteract provideCampaignInteract(CampaignService campaignService,
       WalletService walletService, CreateWalletInteract createWalletInteract,
-      FindDefaultWalletInteract findDefaultWalletInteract, PreferenceRepositoryType sharedPreferences) {
+      FindDefaultWalletInteract findDefaultWalletInteract,
+      PreferenceRepositoryType sharedPreferences) {
     return new CampaignInteract(campaignService, walletService, createWalletInteract,
         new AdvertisingThrowableCodeMapper(), findDefaultWalletInteract, sharedPreferences);
   }
