@@ -204,7 +204,7 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                           @Field("metadata") developerPayload: String?,
                           @Field("callback_url") callback: String?,
                           @Field("reference") orderReference: String?,
-                          @Field("referrer_url") referrerUrl: String?,
+                          @Field("referrer_url") referrerUrl: String?): Single<Transaction>
   }
 
   data class Consumed(val status: String = "CONSUMED")

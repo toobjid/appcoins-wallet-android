@@ -46,14 +46,14 @@ class EwtAuthenticatorService(private val walletService: WalletService,
     val payload = replaceInvalidCharacters(getPayload(address, currentUnixTime))
     val signedContent = walletService.signContent("$header.$payload")
         .blockingGet()
-    return "Bearer $header.$payload.$signedContent"
+    return "\"Bearer\" $header.$payload.$signedContent"
   }
 
   private fun getPayload(walletAddress: String, currentUnixTime: Long): String {
     val payloadJson = JsonObject()
-    cachedAuth[walletAddress] = Pair("", currentUnixTime)
     payloadJson.addProperty("iss", walletAddress)
-    payloadJson.addProperty("exp", currentUnixTime + TTL_IN_SECONDS)
+    val unixTimeWithTTL: Long = currentUnixTime + TTL_IN_SECONDS
+    payloadJson.addProperty("exp", unixTimeWithTTL.toString())
     return payloadJson.toString()
         .convertToBase64()
   }

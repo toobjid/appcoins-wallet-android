@@ -8,8 +8,8 @@ public interface TransactionService {
 
   Single<String> createTransaction(String token, String packageName, String payload,
       String productName, String developerWallet, String storeWallet, String oemWallet,
-      String origin, String walletAddress, BigDecimal priceValue, String priceCurrency, String type,
-      String callback, String orderReference, String referrerUrl);
+      String origin, BigDecimal priceValue, String priceCurrency, String type, String callback,
+      String orderReference, String referrerUrl);
 
   Single<String> getSession(String transactionUid);
 
