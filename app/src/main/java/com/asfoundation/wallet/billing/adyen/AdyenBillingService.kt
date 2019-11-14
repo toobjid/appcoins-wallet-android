@@ -29,24 +29,23 @@ class AdyenBillingService(
   @Volatile
   private var transactionUid: String? = null
 
-  override fun getAuthorization(productName: String?,
-                                developerAddress: String?, payload: String?, origin: String,
-                                priceValue: BigDecimal,
-                                priceCurrency: String, type: String, callback: String?,
-                                orderReference: String?,
-                                appPackageName: String): Observable<AdyenAuthorization> {
+  override fun getAuthorization(productName: String?, developerAddress: String?, payload: String?,
+                                origin: String, priceValue: BigDecimal, priceCurrency: String,
+                                type: String, callback: String?, orderReference: String?,
+                                appPackageName: String,
+                                referrerUrl: String?): Observable<AdyenAuthorization> {
     return relay.doOnSubscribe {
       startPaymentIfNeeded(productName, developerAddress, payload, origin,
-          priceValue, priceCurrency, type, callback, orderReference, appPackageName)
+          priceValue, priceCurrency, type, callback, orderReference, appPackageName, referrerUrl)
     }
         .doOnNext { this.resetProcessingFlag(it) }
   }
 
   override fun getAuthorization(origin: String, priceValue: BigDecimal, priceCurrency: String,
-                                type: String,
-                                appPackageName: String): Observable<AdyenAuthorization> {
-    return getAuthorization(null, null, null, origin, priceValue, priceCurrency, type, null, null,
-        appPackageName)
+                                type: String, appPackageName: String,
+                                referrerUrl: String?): Observable<AdyenAuthorization> {
+    return getAuthorization(null, null, null, origin, priceValue,
+        priceCurrency, type, null, null, appPackageName, referrerUrl)
   }
 
   override fun authorize(payment: Payment, paykey: String): Completable {
@@ -89,19 +88,21 @@ class AdyenBillingService(
   }
 
   private fun startPaymentIfNeeded(productName: String?, developerAddress: String?,
-                                   payload: String?,
-                                   origin: String, priceValue: BigDecimal, priceCurrency: String,
-                                   type: String, callback: String?,
-                                   orderReference: String?, appPackageName: String) {
+                                   payload: String?, origin: String, priceValue: BigDecimal,
+                                   priceCurrency: String, type: String, callback: String?,
+                                   orderReference: String?, appPackageName: String,
+                                   referrerUrl: String?) {
     if (!processingPayment.getAndSet(true)) {
       this.adyenAuthorization = adyen.token.flatMap { token ->
         Single.zip<String, String, Single<String>>(
             partnerAddressService.getStoreAddressForPackage(appPackageName),
             partnerAddressService.getOemAddressForPackage(appPackageName),
             BiFunction { storeAddress, oemAddress ->
-              transactionService.createTransaction(token, merchantName, payload,
+              transactionService.createTransaction(
+                  token, merchantName, payload,
                   productName, developerAddress, storeAddress, oemAddress, origin,
-                  priceValue, priceCurrency, type, callback, orderReference)
+                  priceValue, priceCurrency, type, callback,
+                  orderReference, referrerUrl)
             })
             .flatMap { transactionUid -> transactionUid }
             .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }

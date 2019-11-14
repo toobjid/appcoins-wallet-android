@@ -10,7 +10,8 @@ class BdsAppcoinsRewardsRepository(private val remoteRepository: RemoteRepositor
     AppcoinsRewardsRepository {
   override fun sendCredits(toAddress: String, amount: BigDecimal, origin: String, type: String,
                            packageName: String): Single<AppcoinsRewardsRepository.Status> {
-    return remoteRepository.sendCredits(toAddress, amount, origin, type, packageName)
+    return remoteRepository.sendCredits(toAddress, amount, origin, type,
+        packageName)
         .toSingle { AppcoinsRewardsRepository.Status.SUCCESS }
         .onErrorReturn { map(it) }
   }
@@ -20,12 +21,20 @@ class BdsAppcoinsRewardsRepository(private val remoteRepository: RemoteRepositor
         .map { it.balance }
   }
 
-  override fun pay(amount: BigDecimal, origin: String?, sku: String?, type: String,
-                   developerAddress: String, storeAddress: String, oemAddress: String,
-                   packageName: String, payload: String?, callback: String?,
-                   orderReference: String?): Single<Transaction> {
+  override fun pay(amount: BigDecimal,
+                   origin: String?,
+                   sku: String?,
+                   type: String,
+                   developerAddress: String,
+                   storeAddress: String,
+                   oemAddress: String,
+                   packageName: String,
+                   payload: String?,
+                   callback: String?,
+                   orderReference: String?,
+                   referrerUrl: String?): Single<Transaction> {
     return remoteRepository.pay(amount, origin, sku, type, developerAddress, storeAddress,
-        oemAddress, packageName, payload, callback, orderReference)
+        oemAddress, packageName, payload, callback, orderReference, referrerUrl)
   }
 
   private fun map(throwable: Throwable): AppcoinsRewardsRepository.Status {

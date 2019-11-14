@@ -1,5 +1,6 @@
 package com.asfoundation.wallet.ui.iab
 
+import android.os.Bundle
 import com.appcoins.wallet.bdsbilling.Billing
 import com.appcoins.wallet.bdsbilling.repository.BillingSupportedType
 import com.appcoins.wallet.bdsbilling.repository.entity.Purchase
@@ -12,6 +13,7 @@ import com.asfoundation.wallet.billing.adyen.PaymentType
 import com.asfoundation.wallet.billing.analytics.BillingAnalytics
 import com.asfoundation.wallet.entity.TransactionBuilder
 import com.asfoundation.wallet.repository.BdsPendingTransactionService
+import com.asfoundation.wallet.ui.balance.BalanceInteract
 import com.asfoundation.wallet.ui.gamification.GamificationInteractor
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -19,7 +21,7 @@ import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Action
+import io.reactivex.functions.Function3
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import java.io.IOException
@@ -33,6 +35,7 @@ class PaymentMethodsPresenter(
     private val networkThread: Scheduler,
     private val disposables: CompositeDisposable,
     private val inAppPurchaseInteractor: InAppPurchaseInteractor,
+    private val balanceInteract: BalanceInteract,
     private val billingMessagesMapper: BillingMessagesMapper,
     private val bdsPendingTransactionService: BdsPendingTransactionService,
     private val billing: Billing,
@@ -62,15 +65,10 @@ class PaymentMethodsPresenter(
 
   private fun handlePaymentSelection() {
     disposables.add(view.getPaymentSelection()
-        .flatMapCompletable { selectedPaymentMethod ->
-          if (selectedPaymentMethod == paymentMethodsMapper.map(
-                  PaymentMethodsView.SelectedPaymentMethod.MERGED_APPC)) {
-            return@flatMapCompletable Completable.fromAction { view.showNext() }
-                .subscribeOn(viewScheduler)
-          } else {
-            return@flatMapCompletable Completable.fromAction { view.showBuy() }
-                .subscribeOn(viewScheduler)
-          }
+        .observeOn(viewScheduler)
+        .doOnNext { selectedPaymentMethod ->
+          handleBonusVisibility(selectedPaymentMethod)
+          handlePositiveButtonText(selectedPaymentMethod)
         }
         .subscribe())
   }
@@ -101,6 +99,7 @@ class PaymentMethodsPresenter(
             PaymentMethodsView.SelectedPaymentMethod.LOCAL_PAYMENTS -> view.showLocalPayment(
                 selectedPaymentMethod)
             PaymentMethodsView.SelectedPaymentMethod.MERGED_APPC -> view.showMergedAppcoins()
+            PaymentMethodsView.SelectedPaymentMethod.EARN_APPC -> view.showEarnAppcoins()
             else -> return@doOnNext
           }
         }
@@ -193,6 +192,7 @@ class PaymentMethodsPresenter(
         inAppPurchaseInteractor.convertToLocalFiat(transactionValue).subscribeOn(networkThread)
             .flatMapCompletable { fiatValue ->
               getPaymentMethods(fiatValue)
+                  .observeOn(viewScheduler)
                   .flatMapCompletable { paymentMethods ->
                     Completable.fromAction { selectPaymentMethod(paymentMethods, fiatValue) }
                   }
@@ -300,7 +300,7 @@ class PaymentMethodsPresenter(
             }
                 .ignoreElements()
           } else {
-            return@flatMapCompletable Completable.fromAction { Action { this.close() } }
+            return@flatMapCompletable Completable.fromAction { view.close(Bundle()) }
           }
         }
         .subscribe({ }, { this.showError(it) }))
@@ -324,9 +324,19 @@ class PaymentMethodsPresenter(
       inAppPurchaseInteractor.getPaymentMethods(transaction, fiatValue.amount.toString(),
           fiatValue.currency)
           .map { inAppPurchaseInteractor.mergeAppcoins(it) }
+          .doOnSuccess { updateBalanceDao() }
     } else {
       Single.just(listOf(PaymentMethod.APPC))
     }
+  }
+
+  //Updates database with the latest balance to take less time loading the merged appcoins view
+  private fun updateBalanceDao() {
+    disposables.add(
+        Observable.zip(balanceInteract.getEthBalance(), balanceInteract.getCreditsBalance(),
+            balanceInteract.getAppcBalance(), Function3 { _: Any, _: Any, _: Any -> }).take(1)
+            .subscribeOn(networkThread)
+            .subscribe())
   }
 
   private fun getPreSelectedPaymentMethod(paymentMethods: List<PaymentMethod>): PaymentMethod? {
@@ -366,6 +376,25 @@ class PaymentMethodsPresenter(
       }
     }
     return PaymentMethodsView.PaymentMethodId.CREDIT_CARD.id
+  }
+
+  private fun handleBonusVisibility(selectedPaymentMethod: String) {
+    if (selectedPaymentMethod == paymentMethodsMapper.map(
+            PaymentMethodsView.SelectedPaymentMethod.EARN_APPC)) {
+      view.replaceBonus()
+    } else {
+      view.showBonus()
+    }
+  }
+
+  private fun handlePositiveButtonText(selectedPaymentMethod: String) {
+    if (selectedPaymentMethod == paymentMethodsMapper.map(
+            PaymentMethodsView.SelectedPaymentMethod.MERGED_APPC) || selectedPaymentMethod == paymentMethodsMapper.map(
+            PaymentMethodsView.SelectedPaymentMethod.EARN_APPC)) {
+      view.showNext()
+    } else {
+      view.showBuy()
+    }
   }
 
 }

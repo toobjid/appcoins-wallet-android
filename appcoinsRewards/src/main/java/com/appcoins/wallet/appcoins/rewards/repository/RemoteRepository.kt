@@ -10,7 +10,7 @@ interface RemoteRepository {
   fun getBalance(address: String): Single<BackendApi.RewardBalanceResponse>
   fun pay(amount: BigDecimal, origin: String?, sku: String?, type: String, developerAddress: String,
           storeAddress: String, oemAddress: String, packageName: String, payload: String?,
-          callback: String?, orderReference: String?): Single<Transaction>
+          callback: String?, orderReference: String?, referrerUrl: String?): Single<Transaction>
 
   fun sendCredits(toWallet: String, amount: BigDecimal, origin: String, type: String,
                   packageName: String): Completable

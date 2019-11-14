@@ -30,6 +30,7 @@ import com.asfoundation.wallet.billing.adyen.PaymentType;
 import com.asfoundation.wallet.billing.analytics.BillingAnalytics;
 import com.asfoundation.wallet.entity.TransactionBuilder;
 import com.asfoundation.wallet.repository.BdsPendingTransactionService;
+import com.asfoundation.wallet.ui.balance.BalanceInteract;
 import com.asfoundation.wallet.ui.gamification.GamificationInteractor;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.jakewharton.rxbinding2.widget.RxRadioGroup;
@@ -74,6 +75,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
   @Inject Billing billing;
   @Inject GamificationInteractor gamification;
   @Inject PaymentMethodsMapper paymentMethodsMapper;
+  @Inject BalanceInteract balanceInteractor;
   private PaymentMethodsPresenter presenter;
   private List<String> paymentMethodList = new ArrayList<>();
   private ProgressBar loadingView;
@@ -119,6 +121,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
   private TextView preSelectedNameSingle;
   private TextView preSelectedName;
   private TextView preSelectedDescription;
+  private View noBonusMsg;
 
   public static Fragment newInstance(TransactionBuilder transaction, String productName,
       boolean isBds, boolean isDonation, String developerPayload, String uri,
@@ -164,7 +167,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
     String uri = getArguments().getString(URI);
 
     presenter = new PaymentMethodsPresenter(this, appPackage, AndroidSchedulers.mainThread(),
-        Schedulers.io(), new CompositeDisposable(), inAppPurchaseInteractor,
+        Schedulers.io(), new CompositeDisposable(), inAppPurchaseInteractor, balanceInteractor,
         inAppPurchaseInteractor.getBillingMessagesMapper(), bdsPendingTransactionService, billing,
         analytics, isBds, developerPayload, uri, gamification, transaction, paymentMethodsMapper,
         transactionValue);
@@ -198,6 +201,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
 
     bonusView = view.findViewById(R.id.bonus_layout);
     bonusMsg = view.findViewById(R.id.bonus_msg);
+    noBonusMsg = view.findViewById(R.id.no_bonus_msg);
     bottomSeparator = view.findViewById(R.id.bottom_separator);
 
     bonusValue = view.findViewById(R.id.bonus_value);
@@ -442,14 +446,6 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
         transaction.getType(), selectedPaymentMethod);
   }
 
-  @Override public void hideBonus() {
-    bonusView.setVisibility(View.GONE);
-    bonusMsg.setVisibility(View.GONE);
-    if (bottomSeparator != null) {
-      bottomSeparator.setVisibility(View.INVISIBLE);
-    }
-  }
-
   @NotNull @Override public Observable<String> getPaymentSelection() {
     return Observable.merge(RxRadioGroup.checkedChanges(radioGroup)
             .filter(checkedRadioButtonId -> checkedRadioButtonId >= 0)
@@ -504,14 +500,37 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
     iabView.lockRotation();
   }
 
-  private void setBuyButtonText() {
-    int buyButtonText = isDonation ? R.string.action_donate : R.string.action_buy;
-    buyButton.setText(getResources().getString(buyButtonText));
+  @Override public void showEarnAppcoins() {
+    iabView.showEarnAppcoins();
   }
 
-  private void showBonus() {
+  @Override public void showBonus() {
     bonusView.setVisibility(View.VISIBLE);
     bonusMsg.setVisibility(View.VISIBLE);
+    if (noBonusMsg != null) {
+      noBonusMsg.setVisibility(View.INVISIBLE);
+    }
+  }
+
+  @Override public void replaceBonus() {
+    bonusView.setVisibility(View.INVISIBLE);
+    bonusMsg.setVisibility(View.INVISIBLE);
+    if (noBonusMsg != null) {
+      noBonusMsg.setVisibility(View.VISIBLE);
+    }
+  }
+
+  private void hideBonus() {
+    bonusView.setVisibility(View.GONE);
+    bonusMsg.setVisibility(View.GONE);
+    if (bottomSeparator != null) {
+      bottomSeparator.setVisibility(View.INVISIBLE);
+    }
+  }
+
+  private void setBuyButtonText() {
+    int buyButtonText = isDonation ? R.string.action_donate : R.string.action_buy;
+    buyButton.setText(buyButtonText);
   }
 
   private void updateHeaderInfo(FiatValue fiatValue, boolean isDonation, String currency) {
@@ -594,7 +613,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
         radioButton = createPaymentRadioButton(paymentMethod, index);
         radioButton.setEnabled(paymentMethod.isEnabled());
         if (paymentMethod.getId()
-            .equals(preSelectedMethod)) {
+            .equals(preSelectedMethod) && paymentMethod.isEnabled()) {
           radioButton.setChecked(true);
         }
         if (paymentMethod instanceof AppCoinsPaymentMethod) {

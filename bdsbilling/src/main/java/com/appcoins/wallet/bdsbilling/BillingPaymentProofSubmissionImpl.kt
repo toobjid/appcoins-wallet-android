@@ -27,12 +27,11 @@ class BillingPaymentProofSubmissionImpl internal constructor(
   override fun processAuthorizationProof(authorizationProof: AuthorizationProof): Completable {
     return registerAuthorizationProof(authorizationProof.id, authorizationProof.paymentType,
         authorizationProof.productName, authorizationProof.packageName,
-        authorizationProof.priceValue,
-        authorizationProof.developerAddress, authorizationProof.storeAddress,
-        authorizationProof.origin,
-        authorizationProof.type, authorizationProof.oemAddress, authorizationProof.developerPayload,
-        authorizationProof.callback,
-        authorizationProof.orderReference)
+        authorizationProof.priceValue, authorizationProof.developerAddress,
+        authorizationProof.storeAddress, authorizationProof.origin, authorizationProof.type,
+        authorizationProof.oemAddress, authorizationProof.developerPayload,
+        authorizationProof.callback, authorizationProof.orderReference,
+        authorizationProof.referrerUrl)
         .doOnSuccess { paymentId -> transactionIdsFromApprove[authorizationProof.id] = paymentId }
         .toCompletable()
   }
@@ -55,11 +54,11 @@ class BillingPaymentProofSubmissionImpl internal constructor(
                                           oemWallet: String,
                                           developerPayload: String?,
                                           callback: String?,
-                                          orderReference: String?): Single<String> {
+                                          orderReference: String?,
+                                          referrerUrl: String?): Single<String> {
     return repository.registerAuthorizationProof(id, paymentType, productName, packageName,
-        priceValue, developerWallet, storeWallet, origin, type,
-        oemWallet, developerPayload, callback, orderReference)
-        .subscribeOn(networkScheduler)
+        priceValue, developerWallet, storeWallet, origin, type, oemWallet, developerPayload,
+        callback, orderReference, referrerUrl)
   }
 
   override fun saveTransactionId(key: String) {
@@ -116,7 +115,8 @@ data class AuthorizationProof(val paymentType: String,
                               val origin: String,
                               val developerPayload: String?,
                               val callback: String?,
-                              val orderReference: String?)
+                              val orderReference: String?,
+                              val referrerUrl: String?)
 
 data class PaymentProof(val paymentType: String,
                         val approveProof: String,

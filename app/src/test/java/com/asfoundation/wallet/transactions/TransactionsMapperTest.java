@@ -9,7 +9,11 @@ import com.google.gson.Gson;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,8 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
   @Before public void before() {
     Mockito.when(defaultTokenProvider.getDefaultToken())
         .thenReturn(Single.just(
-            new TokenInfo("0xab949343E6C369C6B17C7ae302c1dEbD4B7B61c3", "AppCoins", "APPC", 18,
-                true, false)));
+            new TokenInfo("0xab949343E6C369C6B17C7ae302c1dEbD4B7B61c3", "AppCoins", "APPC", 18)));
     scheduler = new TestScheduler();
   }
 
@@ -190,6 +193,13 @@ import org.mockito.junit.MockitoJUnitRunner;
         .get(0));
   }
 
+  @Test public void dateFormatTest() throws ParseException {
+    DateFormat receiveDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    Date date = receiveDateFormat.parse("2019-09-17 11:34:21.563408+0000");
+    System.out.println(receiveDateFormat.format(date));
+  }
+
   private ApiClientResponse getData(String json) {
     Gson gson = new Gson();
     return gson.fromJson(json, ApiClientResponse.class);
@@ -197,6 +207,5 @@ import org.mockito.junit.MockitoJUnitRunner;
 
   private final static class ApiClientResponse {
     List<RawTransaction> docs;
-    int pages;
   }
 }

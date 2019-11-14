@@ -26,9 +26,9 @@ interface BillingRepository {
   fun registerAuthorizationProof(id: String, paymentType: String, productName: String?,
                                  packageName: String, priceValue: BigDecimal,
                                  developerWallet: String, storeWallet: String, origin: String,
-                                 type: String, oemWallet: String,
-                                 developerPayload: String?, callback: String?,
-                                 orderReference: String?): Single<String>
+                                 type: String, oemWallet: String, developerPayload: String?,
+                                 callback: String?, orderReference: String?,
+                                 referrerUrl: String?): Single<String>
 
   fun registerPaymentProof(paymentId: String, paymentType: String,
                            paymentProof: String): Completable

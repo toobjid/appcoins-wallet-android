@@ -12,7 +12,7 @@ import java.math.BigDecimal
 class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsApiResponseMapper,
                        private val bdsApiSecondary: BdsApiSecondary) {
   companion object {
-    private val ADYEN_GATEWAY = "adyen"
+    private const val ADYEN_GATEWAY = "adyen"
   }
 
   internal fun isBillingSupported(packageName: String,
@@ -49,18 +49,15 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
         .map { responseMapper.map(it) }
   }
 
-  fun registerAuthorizationProof(origin: String?, type: String,
-                                 oemWallet: String, id: String?,
-                                 gateway: String, productName: String?,
-                                 packageName: String,
-                                 priceValue: BigDecimal,
-                                 developerWallet: String, storeWallet: String,
-                                 developerPayload: String?,
-                                 callback: String?,
-                                 orderReference: String?): Single<Transaction> {
+  fun registerAuthorizationProof(origin: String?, type: String, oemWallet: String, id: String?,
+                                 gateway: String, productName: String?, packageName: String,
+                                 priceValue: BigDecimal, developerWallet: String,
+                                 storeWallet: String, developerPayload: String?, callback: String?,
+                                 orderReference: String?,
+                                 referrerUrl: String?): Single<Transaction> {
     return api.createTransaction(gateway, origin, packageName, priceValue.toPlainString(),
         "APPC", productName, type, null, developerWallet, storeWallet, oemWallet, id,
-        developerPayload, callback, orderReference)
+        developerPayload, callback, orderReference, referrerUrl)
   }
 
   fun registerPaymentProof(paymentId: String, paymentType: String,
@@ -92,10 +89,10 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                              priceValue: BigDecimal, priceCurrency: String, productName: String?,
                              type: String, walletDeveloper: String?, walletStore: String,
                              walletOem: String, developerPayload: String?, callback: String?,
-                             orderReference: String?): Single<Transaction> {
+                             orderReference: String?, referrerUrl: String?): Single<Transaction> {
     return api.createTransaction(ADYEN_GATEWAY, origin, packageName, priceValue.toPlainString(),
         priceCurrency, productName, type, null, walletDeveloper, walletStore, walletOem,
-        token, developerPayload, callback, orderReference)
+        token, developerPayload, callback, orderReference, referrerUrl)
   }
 
   fun getAppcoinsTransaction(uid: String): Single<Transaction> {
@@ -109,8 +106,7 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
   fun transferCredits(toWallet: String, origin: String, type: String, gateway: String,
                       packageName: String, amount: BigDecimal): Completable {
     return api.createTransaction(gateway, origin, packageName, amount.toPlainString(),
-        "APPC", null, type, toWallet, null, null, null,
-        null, null, null, null)
+        "APPC", null, type, toWallet, null, null, null, null, null, null, null, null)
         .toCompletable()
 
   }
@@ -154,7 +150,7 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                         @Path("purchaseId") purchaseToken: String,
                         @Body data: Consumed): Single<Void>
 
-    @GET("broker/8.20180518/methods")
+    @GET("broker/8.20191014/methods")
     fun getPaymentMethods(@Query("price.value") value: String? = null, @Query("price.currency")
     currency: String? = null, @Query("currency.type")
                           type: String? = null): Single<GetMethodsResponse>
@@ -188,8 +184,7 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
      * complete the purchase
      * @param callback url used in some purchases by the application to complete the purchase
      * @param orderReference reference used in some purchases by the application to
-     * @param walletAddress address of the user wallet
-     * @param walletSignature signature obtained after signing the wallet
+     * @param referrerUrl url to validate the transaction
      * complete the purchase
      */
     @FormUrlEncoded
@@ -208,7 +203,8 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                           @Field("token") token: String?,
                           @Field("metadata") developerPayload: String?,
                           @Field("callback_url") callback: String?,
-                          @Field("reference") orderReference: String?): Single<Transaction>
+                          @Field("reference") orderReference: String?,
+                          @Field("referrer_url") referrerUrl: String?,
   }
 
   data class Consumed(val status: String = "CONSUMED")

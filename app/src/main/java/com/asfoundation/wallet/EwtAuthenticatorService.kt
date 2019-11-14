@@ -4,8 +4,10 @@ import com.appcoins.wallet.bdsbilling.WalletService
 import com.asfoundation.wallet.util.convertToBase64
 import com.google.gson.JsonObject
 
-
-private const val TTL = 3600
+/**
+ * Variable representing in seconds the time to live interval of the authentication token.
+ **/
+private const val TTL_IN_SECONDS = 3600
 
 class EwtAuthenticatorService(private val walletService: WalletService,
                               private val header: String) {
@@ -13,45 +15,52 @@ class EwtAuthenticatorService(private val walletService: WalletService,
   private var cachedAuth: MutableMap<String, Pair<String, Long>> = HashMap()
 
   @Synchronized
-  fun getEwtAuthentication(address: String, currentUnixTime: Long): String {
-    return if (shouldBuildEwtAuth(address, currentUnixTime))
-      getNewEwtAuthentication(address, currentUnixTime)
+  fun getEwtAuthentication(address: String): String {
+    return if (shouldBuildEwtAuth(address))
+      getNewEwtAuthentication(address)
     else {
       cachedAuth[address]!!.first
     }
   }
 
   @Synchronized
-  fun getNewEwtAuthentication(address: String, currentUnixTime: Long): String {
-    val payload = getPayload(address, currentUnixTime)
-    val signedPayload = walletService.signContent(payload)
-        .blockingGet()
-    return buildAndSaveEwtString(header.convertToBase64(), payload, signedPayload, address,
-        currentUnixTime)
+  fun getNewEwtAuthentication(address: String): String {
+    val currentUnixTime = System.currentTimeMillis() / 1000L
+    val ewtString = buildEwtString(address, currentUnixTime)
+    cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL_IN_SECONDS)
+    return ewtString
   }
 
-  private fun shouldBuildEwtAuth(address: String, currentUnixTime: Long): Boolean {
-    return cachedAuth[address] == null || hasExpired(currentUnixTime, cachedAuth[address]?.second)
+  private fun shouldBuildEwtAuth(address: String): Boolean {
+    val currentUnixTime = System.currentTimeMillis() / 1000L
+    return !cachedAuth.containsKey(address) || hasExpired(currentUnixTime,
+        cachedAuth[address]?.second)
   }
 
   private fun hasExpired(currentUnixTime: Long, ttlUnixTime: Long?): Boolean {
     return ttlUnixTime == null || currentUnixTime >= ttlUnixTime
   }
 
-  private fun buildAndSaveEwtString(header: String, payload: String,
-                                    signedPayload: String, address: String,
-                                    currentUnixTime: Long): String {
-    val ewtString = "Bearer $header.$payload.$signedPayload"
-    cachedAuth[address] = Pair(ewtString, currentUnixTime + TTL)
-    return ewtString
+  private fun buildEwtString(address: String, currentUnixTime: Long): String {
+    val header = replaceInvalidCharacters(header.convertToBase64())
+    val payload = replaceInvalidCharacters(getPayload(address, currentUnixTime))
+    val signedContent = walletService.signContent("$header.$payload")
+        .blockingGet()
+    return "Bearer $header.$payload.$signedContent"
   }
 
   private fun getPayload(walletAddress: String, currentUnixTime: Long): String {
     val payloadJson = JsonObject()
     cachedAuth[walletAddress] = Pair("", currentUnixTime)
     payloadJson.addProperty("iss", walletAddress)
-    payloadJson.addProperty("exp", currentUnixTime + TTL)
+    payloadJson.addProperty("exp", currentUnixTime + TTL_IN_SECONDS)
     return payloadJson.toString()
         .convertToBase64()
+  }
+
+  private fun replaceInvalidCharacters(ewtString: String): String {
+    return ewtString.replace("=", "")
+        .replace("+", "-")
+        .replace("/", "_")
   }
 }

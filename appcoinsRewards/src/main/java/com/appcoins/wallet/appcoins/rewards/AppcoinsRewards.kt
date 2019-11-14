@@ -37,10 +37,12 @@ class AppcoinsRewards(
           packageName: String,
           payload: String?,
           callbackUrl: String?,
-          orderReference: String?): Completable {
+          orderReference: String?,
+          referrerUrl: String?): Completable {
     return cache.save(getKey(amount.toString(), sku, packageName),
         Transaction(sku, type, developerAddress, storeAddress, oemAddress, packageName, amount,
-            origin, Transaction.Status.PENDING, null, payload, callbackUrl, orderReference))
+            origin, Transaction.Status.PENDING, null, payload, callbackUrl, orderReference,
+            referrerUrl))
   }
 
   fun start() {
@@ -53,12 +55,12 @@ class AppcoinsRewards(
                     Transaction(transaction, Transaction.Status.PROCESSING))
               }
               .flatMapCompletable { transaction ->
-                repository.pay(transaction.amount, getOrigin(transaction),
-                    transaction.sku, transaction.type,
+                repository.pay(transaction.amount,
+                    getOrigin(transaction), transaction.sku, transaction.type,
                     transaction.developerAddress, transaction.storeAddress,
                     transaction.oemAddress, transaction.packageName,
-                    transaction.payload,
-                    transaction.callback, transaction.orderReference)
+                    transaction.payload, transaction.callback,
+                    transaction.orderReference, transaction.referrerUrl)
                     .flatMapCompletable { transaction1 ->
                       waitTransactionCompletion(transaction1).andThen {
                         val tx = Transaction(transaction, Transaction.Status.COMPLETED)
@@ -107,7 +109,6 @@ class AppcoinsRewards(
 
   fun sendCredits(toWallet: String, amount: BigDecimal,
                   packageName: String): Single<AppcoinsRewardsRepository.Status> {
-    return repository.sendCredits(toWallet, amount, "BDS",
-        "TRANSFER", packageName)
+    return repository.sendCredits(toWallet, amount, "BDS", "TRANSFER", packageName)
   }
 }
