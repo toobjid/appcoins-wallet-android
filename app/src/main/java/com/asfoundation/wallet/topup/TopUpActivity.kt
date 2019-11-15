@@ -29,6 +29,7 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
 
   private lateinit var results: PublishRelay<Uri>
   private lateinit var presenter: TopUpActivityPresenter
+  private var isFinishingPurchase = false
 
   companion object {
     @JvmStatic
@@ -71,13 +72,21 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
   }
 
   override fun onBackPressed() {
-    close()
+    when {
+      isFinishingPurchase -> close(true)
+      supportFragmentManager.backStackEntryCount != 0 -> supportFragmentManager.popBackStack()
+      else -> super.onBackPressed()
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       android.R.id.home -> {
-        close()
+        when {
+          isFinishingPurchase -> close(true)
+          supportFragmentManager.backStackEntryCount != 0 -> supportFragmentManager.popBackStack()
+          else -> super.onBackPressed()
+        }
         return true
       }
     }
@@ -88,15 +97,13 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
                                  data: TopUpData,
                                  selectedCurrency: String, origin: String,
                                  transactionType: String, bonusValue: String,
-                                 selectedChip: Int, chipValues: List<FiatValue>) {
+                                 selectedChip: Int, chipValues: List<FiatValue>,
+                                 chipAvailability: Boolean) {
     supportFragmentManager.beginTransaction()
-        .replace(R.id.fragment_container,
-            PaymentAuthFragment.newInstance(
-                paymentType,
-                data,
-                selectedCurrency,
-                origin,
-                transactionType, bonusValue, selectedChip, chipValues))
+        .add(R.id.fragment_container,
+            PaymentAuthFragment.newInstance(paymentType, data, selectedCurrency, origin,
+                transactionType, bonusValue, selectedChip, chipValues, chipAvailability))
+        .addToBackStack(PaymentAuthFragment::class.java.simpleName)
         .commit()
   }
 
@@ -114,9 +121,9 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
     unlockRotation()
   }
 
-  override fun close() {
+  override fun close(navigateToTransactions: Boolean) {
     if (supportFragmentManager.findFragmentByTag(
-            TopUpSuccessFragment::class.java.simpleName) != null) {
+            TopUpSuccessFragment::class.java.simpleName) != null && navigateToTransactions) {
       TransactionsRouter().open(this, true)
     }
     finish()
@@ -145,5 +152,17 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
 
   override fun lockOrientation() {
     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+  }
+
+  override fun setFinishingPurchase() {
+    isFinishingPurchase = true
+  }
+
+  override fun cancelPayment() {
+    if (supportFragmentManager.backStackEntryCount != 0) {
+      supportFragmentManager.popBackStack()
+    } else {
+      super.onBackPressed()
+    }
   }
 }

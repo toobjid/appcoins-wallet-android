@@ -7,14 +7,16 @@ import com.asfoundation.wallet.advertise.AdvertisingThrowableCodeMapper;
 import com.asfoundation.wallet.advertise.CampaignInteract;
 import com.asfoundation.wallet.billing.partners.AddressService;
 import com.asfoundation.wallet.entity.Wallet;
+import com.asfoundation.wallet.interact.AutoUpdateInteract;
 import com.asfoundation.wallet.interact.CreateWalletInteract;
 import com.asfoundation.wallet.interact.FindDefaultWalletInteract;
 import com.asfoundation.wallet.repository.BdsBackEndWriter;
-import com.asfoundation.wallet.repository.PreferenceRepositoryType;
+import com.asfoundation.wallet.repository.PreferencesRepositoryType;
 import com.asfoundation.wallet.repository.WalletNotFoundException;
 import com.asfoundation.wallet.service.Campaign;
 import com.asfoundation.wallet.service.CampaignService;
 import com.asfoundation.wallet.service.CampaignStatus;
+import com.asfoundation.wallet.viewmodel.AutoUpdateModel;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.TestObserver;
@@ -53,7 +55,8 @@ public class ProofOfAttentionServiceTest {
   @Mock FindDefaultWalletInteract findDefaultWalletInteract;
   @Mock AdvertisingThrowableCodeMapper mapper;
   @Mock WalletService walletService;
-  @Mock PreferenceRepositoryType preferences;
+  @Mock PreferencesRepositoryType preferences;
+  @Mock AutoUpdateInteract autoUpdateInteract;
   private int chainId;
   private ProofOfAttentionService proofOfAttentionService;
   private MemoryCache<String, Proof> cache;
@@ -72,8 +75,8 @@ public class ProofOfAttentionServiceTest {
     testScheduler = new TestScheduler();
     ProofWriter proofWriter = new BdsBackEndWriter(defaultWalletInteract, campaignService);
     CampaignInteract campaignInteract =
-        new CampaignInteract(campaignService, walletService, walletInteract, mapper,
-            defaultWalletInteract, preferences);
+        new CampaignInteract(campaignService, walletService, walletInteract, autoUpdateInteract,
+            mapper, defaultWalletInteract, preferences);
     proofOfAttentionService =
         new ProofOfAttentionService(cache, BuildConfig.APPLICATION_ID, hashCalculator,
             new CompositeDisposable(), proofWriter, testScheduler, maxNumberProofComponents,
@@ -100,6 +103,9 @@ public class ProofOfAttentionServiceTest {
     when(addressService.getStoreAddressForPackage(any())).thenReturn(Single.just(STORE_ADDRESS));
 
     when(addressService.getOemAddressForPackage(any())).thenReturn(Single.just(OEM_ADDRESS));
+
+    when(autoUpdateInteract.getAutoUpdateModel(true)).thenReturn(
+        Single.just(new AutoUpdateModel()));
   }
 
   @Test public void setCampaignId() {

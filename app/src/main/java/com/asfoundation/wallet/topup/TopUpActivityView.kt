@@ -12,11 +12,12 @@ interface TopUpActivityView {
                         data: TopUpData,
                         selectedCurrency: String, origin: String,
                         transactionType: String, bonusValue: String,
-                        selectedChip: Int, chipValues: List<FiatValue>)
+                        selectedChip: Int, chipValues: List<FiatValue>,
+                        chipAvailability: Boolean)
 
   fun finish(data: Bundle)
 
-  fun close()
+  fun close(navigateToTransactions: Boolean)
 
   fun acceptResult(uri: Uri)
 
@@ -25,4 +26,8 @@ interface TopUpActivityView {
   fun lockOrientation()
 
   fun unlockRotation()
+
+  fun cancelPayment()
+
+  fun setFinishingPurchase()
 }

@@ -10,14 +10,18 @@ import com.appcoins.wallet.billing.repository.entity.TransactionData
 import com.asf.wallet.R
 import com.asfoundation.wallet.billing.adyen.PaymentType
 import com.asfoundation.wallet.entity.TransactionBuilder
+import com.asfoundation.wallet.interact.AutoUpdateInteract
 import com.asfoundation.wallet.navigator.UriNavigator
 import com.asfoundation.wallet.ui.BaseActivity
 import com.asfoundation.wallet.ui.iab.InAppPurchaseInteractor.PRE_SELECTED_PAYMENT_METHOD_KEY
 import com.asfoundation.wallet.ui.iab.WebViewActivity.SUCCESS
 import com.asfoundation.wallet.ui.iab.share.SharePaymentLinkFragment
+import com.asfoundation.wallet.wallet_blocked.WalletBlockedActivity
 import com.jakewharton.rxrelay2.PublishRelay
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.math.BigDecimal
 import java.util.*
 import javax.inject.Inject
@@ -31,8 +35,10 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
 
   @Inject
   lateinit var inAppPurchaseInteractor: InAppPurchaseInteractor
+  @Inject
+  lateinit var autoUpdateInteract: AutoUpdateInteract
   private var isBackEnable: Boolean = false
-  private var presenter: IabPresenter? = null
+  private lateinit var presenter: IabPresenter
   private var skuDetails: Bundle? = null
   private var transaction: TransactionBuilder? = null
   private var isBds: Boolean = false
@@ -50,14 +56,15 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
     uri = intent.getStringExtra(URI)
     transaction = intent.getParcelableExtra(TRANSACTION_EXTRA)
     isBackEnable = true
-    presenter = IabPresenter(this)
+    presenter =
+        IabPresenter(this, autoUpdateInteract, Schedulers.io(), AndroidSchedulers.mainThread())
 
     if (savedInstanceState != null) {
       if (savedInstanceState.containsKey(SKU_DETAILS)) {
         skuDetails = savedInstanceState.getBundle(SKU_DETAILS)
       }
     }
-    presenter!!.present(savedInstanceState)
+    presenter.present(savedInstanceState)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -65,7 +72,7 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
 
     if (requestCode == WEB_VIEW_REQUEST_CODE) {
       if (resultCode == WebViewActivity.FAIL) {
-        finish()
+        showPaymentMethodsView()
       } else if (resultCode == SUCCESS) {
         results!!.accept(Objects.requireNonNull(data!!.data, "Intent data cannot be null!"))
       }
@@ -152,7 +159,7 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
         .commit()
   }
 
-  override fun showPaymentMethodsView(preSelectedMethod: PaymentMethodsView.SelectedPaymentMethod) {
+  override fun showPaymentMethodsView() {
     val isDonation = TransactionData.TransactionType.DONATION.name
         .equals(transaction?.type, ignoreCase = true)
     supportFragmentManager.beginTransaction()
@@ -189,6 +196,16 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
     supportFragmentManager.beginTransaction()
         .replace(R.id.fragment_container, EarnAppcoinsFragment())
         .commit()
+  }
+
+  override fun showUpdateRequiredView() {
+    supportFragmentManager.beginTransaction()
+        .replace(R.id.fragment_container, IabUpdateRequiredFragment())
+        .commit()
+  }
+
+  override fun showWalletBlocked() {
+    startActivityForResult(WalletBlockedActivity.newIntent(this), BLOCKED_WARNING_REQUEST_CODE)
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -262,6 +279,7 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
     const val DEVELOPER_PAYLOAD = "developer_payload"
     const val BDS = "BDS"
     const val WEB_VIEW_REQUEST_CODE = 1234
+    const val BLOCKED_WARNING_REQUEST_CODE = 12345
     const val IS_BDS_EXTRA = "is_bds_extra"
 
     @JvmStatic
@@ -280,11 +298,5 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
       return intent
     }
 
-    @JvmStatic
-    fun newIntent(activity: Activity, url: String): Intent {
-      val intent = Intent(activity, IabActivity::class.java)
-      intent.data = Uri.parse(url)
-      return intent
-    }
   }
 }

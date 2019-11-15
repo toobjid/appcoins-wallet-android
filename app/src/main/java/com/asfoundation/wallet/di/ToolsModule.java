@@ -90,8 +90,10 @@ import com.asfoundation.wallet.billing.share.BdsShareLinkRepository;
 import com.asfoundation.wallet.billing.share.BdsShareLinkRepository.BdsShareLinkApi;
 import com.asfoundation.wallet.billing.share.ShareLinkRepository;
 import com.asfoundation.wallet.entity.NetworkInfo;
+import com.asfoundation.wallet.interact.AutoUpdateInteract;
 import com.asfoundation.wallet.interact.BalanceGetter;
 import com.asfoundation.wallet.interact.BuildConfigDefaultTokenProvider;
+import com.asfoundation.wallet.interact.CardNotificationsInteractor;
 import com.asfoundation.wallet.interact.CreateWalletInteract;
 import com.asfoundation.wallet.interact.DefaultTokenProvider;
 import com.asfoundation.wallet.interact.FetchCreditsInteract;
@@ -102,6 +104,7 @@ import com.asfoundation.wallet.interact.GetDefaultWalletBalance;
 import com.asfoundation.wallet.interact.PaymentReceiverInteract;
 import com.asfoundation.wallet.interact.SendTransactionInteract;
 import com.asfoundation.wallet.interact.SmsValidationInteract;
+import com.asfoundation.wallet.navigator.UpdateNavigator;
 import com.asfoundation.wallet.permissions.PermissionsInteractor;
 import com.asfoundation.wallet.permissions.repository.PermissionRepository;
 import com.asfoundation.wallet.permissions.repository.PermissionsDatabase;
@@ -121,6 +124,7 @@ import com.asfoundation.wallet.referrals.ReferralInteractorContract;
 import com.asfoundation.wallet.referrals.SharedPreferencesReferralLocalData;
 import com.asfoundation.wallet.repository.ApproveService;
 import com.asfoundation.wallet.repository.ApproveTransactionValidatorBds;
+import com.asfoundation.wallet.repository.AutoUpdateRepository;
 import com.asfoundation.wallet.repository.BackendTransactionRepository;
 import com.asfoundation.wallet.repository.BalanceService;
 import com.asfoundation.wallet.repository.BdsBackEndWriter;
@@ -141,8 +145,8 @@ import com.asfoundation.wallet.repository.OffChainTransactionsRepository;
 import com.asfoundation.wallet.repository.OffChainTransactionsRepository.TransactionsApi;
 import com.asfoundation.wallet.repository.PasswordStore;
 import com.asfoundation.wallet.repository.PendingTransactionService;
-import com.asfoundation.wallet.repository.PreferenceRepositoryType;
-import com.asfoundation.wallet.repository.SharedPreferenceRepository;
+import com.asfoundation.wallet.repository.PreferencesRepositoryType;
+import com.asfoundation.wallet.repository.SharedPreferencesRepository;
 import com.asfoundation.wallet.repository.SignDataStandardNormalizer;
 import com.asfoundation.wallet.repository.SmsValidationRepositoryType;
 import com.asfoundation.wallet.repository.TokenRepositoryType;
@@ -161,6 +165,7 @@ import com.asfoundation.wallet.router.GasSettingsRouter;
 import com.asfoundation.wallet.service.AccountKeystoreService;
 import com.asfoundation.wallet.service.AccountWalletService;
 import com.asfoundation.wallet.service.AppsApi;
+import com.asfoundation.wallet.service.AutoUpdateService;
 import com.asfoundation.wallet.service.BDSAppsApi;
 import com.asfoundation.wallet.service.CampaignService;
 import com.asfoundation.wallet.service.CampaignService.CampaignApi;
@@ -171,6 +176,7 @@ import com.asfoundation.wallet.service.SmsValidationApi;
 import com.asfoundation.wallet.service.TokenRateService;
 import com.asfoundation.wallet.service.TokenRateService.TokenToFiatApi;
 import com.asfoundation.wallet.topup.TopUpInteractor;
+import com.asfoundation.wallet.topup.TopUpLimitValues;
 import com.asfoundation.wallet.topup.TopUpValuesApiResponseMapper;
 import com.asfoundation.wallet.topup.TopUpValuesService;
 import com.asfoundation.wallet.topup.TopUpValuesService.TopUpValuesApi;
@@ -215,6 +221,9 @@ import com.asfoundation.wallet.util.LogInterceptor;
 import com.asfoundation.wallet.util.OneStepTransactionParser;
 import com.asfoundation.wallet.util.TransferParser;
 import com.asfoundation.wallet.util.UserAgentInterceptor;
+import com.asfoundation.wallet.wallet_blocked.WalletBlockedInteract;
+import com.asfoundation.wallet.wallet_blocked.WalletStatusApi;
+import com.asfoundation.wallet.wallet_blocked.WalletStatusRepository;
 import com.facebook.appevents.AppEventsLogger;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -331,12 +340,12 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .build();
   }
 
-  @Singleton @Provides SharedPreferenceRepository providePreferenceRepository(Context context) {
-    return new SharedPreferenceRepository(context);
+  @Singleton @Provides SharedPreferencesRepository providePreferencesRepository(Context context) {
+    return new SharedPreferencesRepository(context);
   }
 
-  @Singleton @Provides PreferenceRepositoryType providePreferenceRepositoryType(
-      SharedPreferenceRepository sharedPreferenceRepository) {
+  @Singleton @Provides PreferencesRepositoryType providePreferenceRepositoryType(
+      SharedPreferencesRepository sharedPreferenceRepository) {
     return sharedPreferenceRepository;
   }
 
@@ -416,6 +425,12 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   @Provides FindDefaultWalletInteract provideFindDefaultWalletInteract(
       WalletRepositoryType walletRepository) {
     return new FindDefaultWalletInteract(walletRepository);
+  }
+
+  @Provides WalletBlockedInteract provideWalletBlockedInteract(
+      FindDefaultWalletInteract findDefaultWalletInteract,
+      WalletStatusRepository walletStatusRepository) {
+    return new WalletBlockedInteract(findDefaultWalletInteract, walletStatusRepository);
   }
 
   @Provides SendTransactionInteract provideSendTransactionInteract(
@@ -940,8 +955,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides OnboardingInteract provideOnboardingInteract(CreateWalletInteract createWalletInteract,
-      WalletService walletService, PreferenceRepositoryType preferenceRepositoryType) {
-    return new OnboardingInteract(createWalletInteract, walletService, preferenceRepositoryType);
+      WalletService walletService, PreferencesRepositoryType preferencesRepositoryType) {
+    return new OnboardingInteract(createWalletInteract, walletService, preferencesRepositoryType);
   }
 
   @Singleton @Provides BillingAnalytics provideBillingAnalytics(AnalyticsManager analytics) {
@@ -973,6 +988,13 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       PromotionsRepository promotionsRepository) {
     return new ReferralInteractor(new SharedPreferencesReferralLocalData(preferences),
         findDefaultWalletInteract, promotionsRepository);
+  }
+
+  @Provides CardNotificationsInteractor provideCardNotificationInteractor(
+      ReferralInteractorContract referralInteractor, AutoUpdateInteract autoUpdateInteract,
+      SharedPreferencesRepository sharedPreferencesRepository) {
+    return new CardNotificationsInteractor(referralInteractor, autoUpdateInteract,
+        sharedPreferencesRepository);
   }
 
   @Singleton @Provides Permissions providesPermissions(Context context) {
@@ -1057,7 +1079,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       LocalCurrencyConversionService conversionService,
       GamificationInteractor gamificationInteractor, TopUpValuesService topUpValuesService) {
     return new TopUpInteractor(repository, conversionService, gamificationInteractor,
-        topUpValuesService, new LinkedHashMap<>());
+        topUpValuesService, new LinkedHashMap<>(), new TopUpLimitValues());
   }
 
   @Singleton @Provides TopUpValuesService providesTopUpValuesService(TopUpValuesApi topUpValuesApi,
@@ -1173,9 +1195,20 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(SmsValidationApi.class);
   }
 
+  @Singleton @Provides WalletStatusApi provideWalletStatusApi(OkHttpClient client, Gson gson) {
+    String baseUrl = BuildConfig.BACKEND_HOST;
+    return new Retrofit.Builder().baseUrl(baseUrl)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .build()
+        .create(WalletStatusApi.class);
+  }
+
   @Singleton @Provides SmsValidationInteract provideSmsValidationInteract(
-      SmsValidationRepositoryType smsValidationRepository) {
-    return new SmsValidationInteract(smsValidationRepository);
+      SmsValidationRepositoryType smsValidationRepository,
+      PreferencesRepositoryType preferencesRepositoryType) {
+    return new SmsValidationInteract(smsValidationRepository, preferencesRepositoryType);
   }
 
   @Singleton @Provides BalanceInteract provideBalanceInteract(
@@ -1195,10 +1228,11 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides CampaignInteract provideCampaignInteract(CampaignService campaignService,
       WalletService walletService, CreateWalletInteract createWalletInteract,
-      FindDefaultWalletInteract findDefaultWalletInteract,
-      PreferenceRepositoryType sharedPreferences) {
+      AutoUpdateInteract autoUpdateInteract, FindDefaultWalletInteract findDefaultWalletInteract,
+      PreferencesRepositoryType sharedPreferences) {
     return new CampaignInteract(campaignService, walletService, createWalletInteract,
-        new AdvertisingThrowableCodeMapper(), findDefaultWalletInteract, sharedPreferences);
+        autoUpdateInteract, new AdvertisingThrowableCodeMapper(), findDefaultWalletInteract,
+        sharedPreferences);
   }
 
   @Singleton @Provides NotificationManager provideNotificationManager(Context context) {
@@ -1235,5 +1269,45 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides PackageManager providePackageManager(Context context) {
     return context.getPackageManager();
+  }
+
+  @Singleton @Provides AutoUpdateService.AutoUpdateApi provideAutoUpdateApi(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
+    String baseUrl = BuildConfig.BACKEND_HOST;
+    return new Retrofit.Builder().baseUrl(baseUrl)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .build()
+        .create(AutoUpdateService.AutoUpdateApi.class);
+  }
+
+  @Provides AutoUpdateService provideAutoUpdateService(
+      AutoUpdateService.AutoUpdateApi autoUpdateApi) {
+    return new AutoUpdateService(autoUpdateApi);
+  }
+
+  @Provides @Named("local_version_code") int provideLocalVersionCode(Context context,
+      PackageManager packageManager) {
+    try {
+      return packageManager.getPackageInfo(context.getPackageName(), 0).versionCode;
+    } catch (PackageManager.NameNotFoundException e) {
+      return -1;
+    }
+  }
+
+  @Provides AutoUpdateRepository provideAutoUpdateRepository(AutoUpdateService autoUpdateService) {
+    return new AutoUpdateRepository(autoUpdateService);
+  }
+
+  @Provides AutoUpdateInteract provideAutoUpdateInteract(AutoUpdateRepository autoUpdateRepository,
+      @Named("local_version_code") int localVersionCode, PackageManager packageManager,
+      PreferencesRepositoryType sharedPreferences, Context context) {
+    return new AutoUpdateInteract(autoUpdateRepository, localVersionCode, Build.VERSION.SDK_INT,
+        packageManager, context.getPackageName(), sharedPreferences);
+  }
+
+  @Provides UpdateNavigator provideUpdateNavigator() {
+    return new UpdateNavigator();
   }
 }

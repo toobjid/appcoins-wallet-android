@@ -67,7 +67,7 @@
   <string name="credits_purchase_value">%s APPC Credits</string>
   <string name="buying">Buying %s</string>
   <string name="action_buy">Buy</string>
-  <string name="empty" />
+  <string name="empty"/>
   <string name="try_again">Try again</string>
   <string name="already_have_account">Already have a wallet?</string>
   <string name="action_create_new_account">Create new wallet</string>
@@ -231,12 +231,12 @@
   <string name="transaction_status_pending">Pending</string>
   <string name="transaction_status_failed">Failed</string>
   <string name="transaction_type_iab">In-App Purchase</string>
-  <string name="transaction_type_poa">Proof of Attention</string>
-  <string name="transaction_type_poa_offchain">Proof of Attention Hybrid</string>
+  <string name="transaction_type_poa">Reward</string>
+  <string name="transaction_type_poa_offchain">Reward</string>
   <string name="transaction_type_standard">Transfer</string>
   <string name="transaction_type_bonus">Bonus</string>
   <string name="transaction_type_miuraiden">µRaiden channel</string>
-  <string name="transaction_type_p2p">P2P Transfer</string>
+  <string name="transaction_type_p2p">Transfer</string>
   <string name="transaction_details_brand_txt">Powered By Ethereum</string>
   <string name="transaction_close_channel_btn_txt">close channel</string>
   <string name="miuraiden_trans_details_open">µRaiden channel open</string>
@@ -400,6 +400,8 @@
   <string name="p2p_send_currency_appc" translatable="false">APPC</string>
   <string name="p2p_send_currency_appc_c" translatable="false">APPC-C</string>
 
+
+
   <!--Common-->
   <string name="error_general">Something went wrong</string>
   <string name="error_missing_field">Mandatory field</string>
@@ -461,6 +463,7 @@
   <string name="verification_settings_unverified_title">Verify Wallet</string>
   <string name="verification_settings_unverified_body">Get rewards and invite friends</string>
   <string name="verification_settings_verified_title">Wallet Verified</string>
+  <string name="verification_settings_no_internet">You need to be connected to the internet</string>
 
   <!--Purchase Flow-->
   <string name="purchase_error_incomplete_transaction_body">It seems this purchase is already being processed. Please hold on until the transaction is completed or contact our Support Team.</string>
@@ -477,7 +480,9 @@
   <string name="purchase_current_balance_body">Current balance:</string>
   <string name="purchase_current_balance_appcc_body">%s in AppCoins Credits.</string>
   <string name="purchase_current_balance_appc_eth_body">%s in AppCoins and Ether.</string>
-  
+  <string name="purchase_wallet_blocked_title">Your AppCoins Credits balance is blocked</string>
+  <string name="purchase_wallet_blocked_body">Due to an unusual transaction history, your AppCoins Credits balance was blocked. You\'ll still be able to make payments and transaction with other methods than APPC Credits.\n\nIf you believe this is a mistake, contact us at:</string>
+
 
   <!--Referral Program-->
   <string name="referral_onboarding_title">Invite Your Friends!</string>
@@ -510,7 +515,7 @@
   <string name="referral_dropup_menu_requirements_body">You\'ll earn %1$s worth in AppCoins Credits for each friend meeting both requirements (up to %2$s)</string>
 
 
-  <!--Promotions-->
+<!--Promotions-->
   <string name="bottom_navigation_promotions">Promotions</string>
   <string name="bottom_navigation_promotions_detailed">Discover how to earn free AppCoins Credits with our promotions and campaigns!</string>
   <string name="promotions_title">Promotions</string>
@@ -518,5 +523,15 @@
   <string name="promotions_referral_card_body">Share your invite link and earn AppCoins Credits.</string>
   <string name="promotions_gamification_card_title">Up to 30% bonus on every purchase</string>
   <string name="promotions_new">NEW</string>
+
+<!--Update-->
+  <string name="update_wallet_poa_notification_title">Update to receive rewards</string>
+  <string name="update_wallet_poa_notification_body">Please update the AppCoins Wallet to receive this reward.</string>
+  <string name="update_wallet_purchase_title">You need to update!</string>
+  <string name="update_wallet_purchase_body">Update the AppCoins Wallet to complete this purchase.</string>
+  <string name="update_wallet_hard_body">It seems you\'re using an old version of the AppCoins Wallet. Please update it to guarantee the best experience and security.</string>
+  <string name="update_wallet_soft_title">Don\'t get left behind!</string>
+  <string name="update_wallet_soft_body">Keeping the AppCoins Wallet updated guarantees the best experience.</string>
+  <string name="update_button">UPDATE</string>
 
 </resources>
