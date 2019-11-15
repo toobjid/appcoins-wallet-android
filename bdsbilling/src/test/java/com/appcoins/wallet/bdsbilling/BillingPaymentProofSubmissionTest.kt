@@ -99,8 +99,6 @@ class BillingPaymentProofSubmissionTest {
     verify(api, times(1)).createTransaction(paymentType, origin, packageName,
         priceValue, currency, productName, type, null, developerAddress, storeAddress,
         oemAddress, paymentId, developerPayload, callback, orderReference, referrerUrl)
-    verify(api, times(1)).patchTransaction(paymentType, paymentId,
-        walletAddress, signedContent, paymentToken)
-
+    verify(api, times(1)).patchTransaction(paymentType, paymentId, paymentToken)
   }
 }

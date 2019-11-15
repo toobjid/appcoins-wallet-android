@@ -57,8 +57,8 @@ class AppcoinsRewardsTest {
 
   @Before
   fun setUp() {
-    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE,
-        BDS_ORIGIN, TYPE_TRANSFER, PACKAGE_NAME)).thenReturn(Completable.complete())
+    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, PRICE, BDS_ORIGIN, TYPE_TRANSFER,
+        PACKAGE_NAME)).thenReturn(Completable.complete())
     `when`(remoteApi.getBalance(USER_ADDRESS)).thenReturn(
         Single.just(BackendApi.RewardBalanceResponse(BALANCE)))
 
@@ -206,8 +206,8 @@ class AppcoinsRewardsTest {
 
   @Test
   fun transferCreditsNetworkError() {
-    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE,
-        BDS_ORIGIN, TYPE_TRANSFER, PACKAGE_NAME)).thenReturn(
+    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, PRICE, BDS_ORIGIN, TYPE_TRANSFER,
+        PACKAGE_NAME)).thenReturn(
         Completable.error(HttpException(
             Response.error<AppcoinsRewardsRepository.Status>(400, ResponseBody.create(null, "")))))
     val test = appcoinsRewards.sendCredits(DEVELOPER_ADDRESS, PRICE, PACKAGE_NAME)
@@ -220,8 +220,8 @@ class AppcoinsRewardsTest {
 
   @Test
   fun transferCreditsUnknownError() {
-    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, USER_ADDRESS, USER_ADDRESS_SIGANTURE, PRICE,
-        BDS_ORIGIN, TYPE_TRANSFER, PACKAGE_NAME)).thenReturn(
+    `when`(remoteApi.sendCredits(DEVELOPER_ADDRESS, PRICE, BDS_ORIGIN, TYPE_TRANSFER,
+        PACKAGE_NAME)).thenReturn(
         Completable.error(NullPointerException()))
     val test = appcoinsRewards.sendCredits(DEVELOPER_ADDRESS, PRICE, PACKAGE_NAME)
         .test()

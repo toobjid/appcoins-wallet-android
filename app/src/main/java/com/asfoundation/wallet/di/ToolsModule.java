@@ -1195,7 +1195,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .create(SmsValidationApi.class);
   }
 
-  @Singleton @Provides WalletStatusApi provideWalletStatusApi(OkHttpClient client, Gson gson) {
+  @Singleton @Provides WalletStatusApi provideWalletStatusApi(
+      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
     String baseUrl = BuildConfig.BACKEND_HOST;
     return new Retrofit.Builder().baseUrl(baseUrl)
         .client(client)
