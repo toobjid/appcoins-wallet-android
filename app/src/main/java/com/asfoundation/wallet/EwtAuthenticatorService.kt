@@ -44,9 +44,9 @@ class EwtAuthenticatorService(private val walletService: WalletService,
   private fun buildEwtString(address: String, currentUnixTime: Long): String {
     val header = replaceInvalidCharacters(header.convertToBase64())
     val payload = replaceInvalidCharacters(getPayload(address, currentUnixTime))
-    val signedContent = walletService.signContent("$header.$payload")
+    val signedContent = walletService.signContent(payload)
         .blockingGet()
-    return "\"Bearer\" $header.$payload.$signedContent"
+    return "Bearer $header.$payload.$signedContent".replace("[\n\r]", "")
   }
 
   private fun getPayload(walletAddress: String, currentUnixTime: Long): String {

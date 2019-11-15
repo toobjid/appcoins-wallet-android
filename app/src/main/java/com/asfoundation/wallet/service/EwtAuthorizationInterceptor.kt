@@ -34,7 +34,7 @@ class EwtAuthenticationInterceptor(private val walletService: WalletService,
                                    chain: Interceptor.Chain): Response {
     return if (ewtAuth != "Error") {
       val requestWithEwt = originalRequest.newBuilder()
-          .addHeader("{\"Authorization\"", "$ewtAuth}")
+          .addHeader("Authorization", ewtAuth)
           .build()
       chain.proceed(requestWithEwt)
     } else {

@@ -676,8 +676,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         airdropChainIdMapper);
   }
 
-  @Singleton @Provides AppcoinsApps provideAppcoinsApps(
-      @Named("ewt_authenticator") OkHttpClient client, Gson gson) {
+  @Singleton @Provides AppcoinsApps provideAppcoinsApps(@Named("default") OkHttpClient client,
+      Gson gson) {
     AppsApi appsApi = new Retrofit.Builder().baseUrl(API_BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create(gson))
@@ -882,8 +882,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
     };
   }
 
-  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(
-      @Named("ewt_authenticator") OkHttpClient client, ObjectMapper objectMapper) {
+  @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(@Named("default") OkHttpClient client,
+      ObjectMapper objectMapper) {
     return new Retrofit.Builder().baseUrl("https://ws75.aptoide.com/api/7/")
         .client(client)
         .addConverterFactory(JacksonConverterFactory.create(objectMapper))
