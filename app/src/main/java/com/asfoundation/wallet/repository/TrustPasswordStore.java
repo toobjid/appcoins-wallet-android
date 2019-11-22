@@ -9,7 +9,6 @@ import com.asfoundation.wallet.Logger;
 import com.asfoundation.wallet.entity.ServiceErrorException;
 import com.asfoundation.wallet.entity.Wallet;
 import com.asfoundation.wallet.util.KS;
-import com.wallet.pwd.trustapp.PasswordManager;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import java.security.SecureRandom;
@@ -38,7 +37,8 @@ public class TrustPasswordStore implements PasswordStore {
       if (key.contains("-pwd")) {
         String address = key.replace("-pwd", "");
         try {
-          KS.put(context, address.toLowerCase(), PasswordManager.getPassword(address, context));
+          KS.put(context, address.toLowerCase(),
+              InternalPasswordManager.getPassword(address, context));
         } catch (Exception ex) {
           Toast.makeText(context, "Could not process passwords.", Toast.LENGTH_LONG)
               .show();
@@ -53,7 +53,7 @@ public class TrustPasswordStore implements PasswordStore {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         return new String(KS.get(context, wallet.address));
       } else {
-        return PasswordManager.getPassword(wallet.address, context);
+        return InternalPasswordManager.getPassword(wallet.address, context);//TODO CHANGE
       }
     })
         .onErrorResumeNext(throwable -> getPasswordFallBack(wallet.address));
@@ -65,7 +65,7 @@ public class TrustPasswordStore implements PasswordStore {
         KS.put(context, address, password);
       } else {
         try {
-          PasswordManager.setPassword(address, password, context);
+          InternalPasswordManager.setPassword(address, password, context);//TODO CHANGE
         } catch (Exception e) {
           throw new ServiceErrorException(ServiceErrorException.KEY_STORE_ERROR);
         }
@@ -98,7 +98,7 @@ public class TrustPasswordStore implements PasswordStore {
         }
       } else {
         try {
-          return PasswordManager.getPassword(defaultAddress, context);
+          return InternalPasswordManager.getPassword(defaultAddress, context);
         } catch (Exception ex) {
           logger.log(ex);
           throw new ServiceErrorException(ServiceErrorException.KEY_STORE_ERROR,

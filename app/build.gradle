@@ -232,7 +232,6 @@ dependencies {
   implementation 'com.flurry.android:analytics:12.0.1@aar'
   // PW
   implementation fileTree(dir: 'libs', include: ['*.jar'])
-  implementation project(":tn")
   implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.asfoundation:ethereumj-android:$project.ethereumjSdkVersion"
