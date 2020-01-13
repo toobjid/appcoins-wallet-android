@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 class AppcoinsRewardsTest {
   companion object {
     private const val USER_ADDRESS: String = "0xd9BA3c6932a5084D0CA0769893353D60b23AAfC4"
-    private const val USER_ADDRESS_SIGANTURE: String =
+    private const val USER_ADDRESS_SIGNATURE: String =
         "27c3217155834a21fa8f97df99053f2874727837c03805c2eb1ba56383473b2a07fd865dd5db1359a717dfec9aa14bab6437184b14969ec3551b86e9d29c98d401"
     private const val DEVELOPER_ADDRESS: String = "0x652d25ac09f79e9619fba99f34f0d8420d0956b1"
     private const val OEM_ADDRESS: String = "0x652d25ac09f79e9619fba99f34f0d8420d0956b1"
@@ -101,7 +101,7 @@ class AppcoinsRewardsTest {
           }
 
           override fun signContent(content: String): Single<String> {
-            return Single.just(USER_ADDRESS_SIGANTURE)
+            return Single.just(USER_ADDRESS_SIGNATURE)
 
           }
         }, MemoryCache(BehaviorSubject.create(), ConcurrentHashMap()), scheduler, billing

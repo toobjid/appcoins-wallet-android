@@ -42,6 +42,10 @@ import com.appcoins.wallet.gamification.repository.BdsPromotionsRepository;
 import com.appcoins.wallet.gamification.repository.GamificationApi;
 import com.appcoins.wallet.gamification.repository.PromotionsRepository;
 import com.appcoins.wallet.permissions.Permissions;
+import com.aptoide.apk.injector.extractor.data.Extractor;
+import com.aptoide.apk.injector.extractor.data.ExtractorV1;
+import com.aptoide.apk.injector.extractor.data.ExtractorV2;
+import com.aptoide.apk.injector.extractor.domain.IExtract;
 import com.asf.appcoins.sdk.contractproxy.AppCoinsAddressProxyBuilder;
 import com.asf.appcoins.sdk.contractproxy.AppCoinsAddressProxySdk;
 import com.asf.wallet.BuildConfig;
@@ -93,7 +97,6 @@ import com.asfoundation.wallet.entity.NetworkInfo;
 import com.asfoundation.wallet.interact.AutoUpdateInteract;
 import com.asfoundation.wallet.interact.BalanceGetter;
 import com.asfoundation.wallet.interact.BuildConfigDefaultTokenProvider;
-import com.asfoundation.wallet.interact.CardNotificationsInteractor;
 import com.asfoundation.wallet.interact.CreateWalletInteract;
 import com.asfoundation.wallet.interact.DefaultTokenProvider;
 import com.asfoundation.wallet.interact.FetchCreditsInteract;
@@ -977,10 +980,11 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides PromotionsInteractorContract providePromotionsInteractor(
-      ReferralInteractorContract referralInteractor, PromotionsRepository promotionsRepository,
+      ReferralInteractorContract referralInteractor, GamificationInteractor gamificationInteractor,
+      PromotionsRepository promotionsRepository,
       FindDefaultWalletInteract findDefaultWalletInteract) {
-    return new PromotionsInteractor(referralInteractor, promotionsRepository,
-        findDefaultWalletInteract);
+    return new PromotionsInteractor(referralInteractor, gamificationInteractor,
+        promotionsRepository, findDefaultWalletInteract);
   }
 
   @Provides ReferralInteractorContract provideReferralInteractor(SharedPreferences preferences,
@@ -988,13 +992,6 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       PromotionsRepository promotionsRepository) {
     return new ReferralInteractor(new SharedPreferencesReferralLocalData(preferences),
         findDefaultWalletInteract, promotionsRepository);
-  }
-
-  @Provides CardNotificationsInteractor provideCardNotificationInteractor(
-      ReferralInteractorContract referralInteractor, AutoUpdateInteract autoUpdateInteract,
-      SharedPreferencesRepository sharedPreferencesRepository) {
-    return new CardNotificationsInteractor(referralInteractor, autoUpdateInteract,
-        sharedPreferencesRepository);
   }
 
   @Singleton @Provides Permissions providesPermissions(Context context) {
@@ -1264,8 +1261,14 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
         .setOngoing(false);
   }
 
-  @Singleton @Provides OemIdExtractorService provideOemIdExtractorService(Context context) {
-    return new OemIdExtractorService(new OemIdExtractorV1(context), new OemIdExtractorV2(context));
+  @Singleton @Provides IExtract provideIExtract() {
+    return new Extractor(new ExtractorV1(), new ExtractorV2());
+  }
+
+  @Singleton @Provides OemIdExtractorService provideOemIdExtractorService(Context context,
+      IExtract extractor) {
+    return new OemIdExtractorService(new OemIdExtractorV1(context),
+        new OemIdExtractorV2(context, extractor));
   }
 
   @Singleton @Provides PackageManager providePackageManager(Context context) {

@@ -1,5 +1,6 @@
 package com.asfoundation.wallet.ui.widget.adapter;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,14 +16,16 @@ import com.asfoundation.wallet.ui.widget.entity.DateSortedItem;
 import com.asfoundation.wallet.ui.widget.entity.SortedItem;
 import com.asfoundation.wallet.ui.widget.entity.TimestampSortedItem;
 import com.asfoundation.wallet.ui.widget.entity.TransactionSortedItem;
+import com.asfoundation.wallet.ui.widget.entity.TransactionsModel;
 import com.asfoundation.wallet.ui.widget.holder.AppcoinsApplicationListViewHolder;
 import com.asfoundation.wallet.ui.widget.holder.BinderViewHolder;
 import com.asfoundation.wallet.ui.widget.holder.CardNotificationAction;
 import com.asfoundation.wallet.ui.widget.holder.CardNotificationsListViewHolder;
 import com.asfoundation.wallet.ui.widget.holder.TransactionDateHolder;
 import com.asfoundation.wallet.ui.widget.holder.TransactionHolder;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 import rx.functions.Action1;
 import rx.functions.Action2;
 
@@ -64,21 +67,26 @@ public class TransactionsAdapter extends RecyclerView.Adapter<BinderViewHolder> 
 
   private Wallet wallet;
   private NetworkInfo network;
+  private Resources resources;
 
   public TransactionsAdapter(OnTransactionClickListener onTransactionClickListener,
       Action1<AppcoinsApplication> applicationClickListener,
-      Action2<CardNotification, CardNotificationAction> referralNotificationClickListener) {
+      Action2<CardNotification, CardNotificationAction> referralNotificationClickListener,
+      Resources resources) {
     this.onTransactionClickListener = onTransactionClickListener;
     this.applicationClickListener = applicationClickListener;
     this.referralNotificationClickListener = referralNotificationClickListener;
+    this.resources = resources;
   }
 
-  @Override public BinderViewHolder<?> onCreateViewHolder(ViewGroup parent, int viewType) {
+  @NotNull @Override
+  public BinderViewHolder<?> onCreateViewHolder(@NotNull ViewGroup parent, int viewType) {
     BinderViewHolder holder = null;
     switch (viewType) {
       case TransactionHolder.VIEW_TYPE:
         holder =
-            new TransactionHolder(R.layout.item_transaction, parent, onTransactionClickListener);
+            new TransactionHolder(R.layout.item_transaction, parent, onTransactionClickListener,
+                resources);
         break;
       case TransactionDateHolder.VIEW_TYPE:
         holder = new TransactionDateHolder(R.layout.item_transactions_date_head, parent);
@@ -141,13 +149,24 @@ public class TransactionsAdapter extends RecyclerView.Adapter<BinderViewHolder> 
     notifyDataSetChanged();
   }
 
-  public void addTransactions(List<Transaction> transactions) {
+  public void addItems(TransactionsModel transactionsModel) {
     items.beginBatchedUpdates();
-    if (items.size() == 0) {
-      items.add(new ApplicationSortedItem(Collections.emptyList(),
-          AppcoinsApplicationListViewHolder.VIEW_TYPE));
+
+    List<CardNotification> notifications = transactionsModel.getNotifications();
+    if (!notifications.isEmpty()) {
+      removeApps();
+      items.add(
+          new CardNotificationSortedItem(notifications, CardNotificationsListViewHolder.VIEW_TYPE));
+    } else {
+      transactionsModel.getApplications();
+      if (!transactionsModel.getApplications()
+          .isEmpty()) {
+        items.add(new ApplicationSortedItem(transactionsModel.getApplications(),
+            AppcoinsApplicationListViewHolder.VIEW_TYPE));
+      }
     }
-    for (Transaction transaction : transactions) {
+
+    for (Transaction transaction : transactionsModel.getTransactions()) {
       TransactionSortedItem sortedItem =
           new TransactionSortedItem(TransactionHolder.VIEW_TYPE, transaction,
               TimestampSortedItem.DESC);
@@ -161,12 +180,30 @@ public class TransactionsAdapter extends RecyclerView.Adapter<BinderViewHolder> 
     items.clear();
   }
 
-  public void setApps(List<AppcoinsApplication> apps) {
-    items.add(new ApplicationSortedItem(apps, AppcoinsApplicationListViewHolder.VIEW_TYPE));
+  public void removeApps() {
+    for (int i = 0; i < items.size(); i++) {
+      if (items.get(i) instanceof ApplicationSortedItem) {
+        items.removeItemAt(i);
+        this.notifyItemChanged(i);
+      }
+    }
   }
 
-  public void setNotifications(List<CardNotification> notifications) {
-    items.add(
-        new CardNotificationSortedItem(notifications, CardNotificationsListViewHolder.VIEW_TYPE));
+  public boolean removeItem(CardNotification cardNotification) {
+    for (int i = 0; i < items.size(); i++) {
+      if (items.get(i) instanceof CardNotificationSortedItem) {
+        CardNotificationSortedItem cardNotificationSortedItem =
+            (CardNotificationSortedItem) items.get(i);
+        List<CardNotification> card = (List<CardNotification>) cardNotificationSortedItem.value;
+        for (int j = 0; j < card.size(); j++) {
+          if (Objects.equals(card.get(j), cardNotification)) {
+            card.remove(j);
+            this.notifyItemChanged(i);
+            return card.size() == 0;
+          }
+        }
+      }
+    }
+    return false;
   }
 }

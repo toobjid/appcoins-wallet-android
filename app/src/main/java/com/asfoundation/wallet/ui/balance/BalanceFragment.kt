@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_balance.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.math.abs
 
 class BalanceFragment : DaggerFragment(), BalanceFragmentView {
 
@@ -68,7 +69,7 @@ class BalanceFragment : DaggerFragment(), BalanceFragmentView {
 
     (app_bar as AppBarLayout).addOnOffsetChangedListener(
         AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
-          val percentage = Math.abs(verticalOffset).toFloat() / appBarLayout.totalScrollRange
+          val percentage = abs(verticalOffset).toFloat() / appBarLayout.totalScrollRange
           setAlpha(balance_label, percentage)
           setAlpha(balance_value, percentage)
           setAlpha(balance_label_placeholder, percentage)
@@ -98,7 +99,7 @@ class BalanceFragment : DaggerFragment(), BalanceFragmentView {
     (ether_token.token_balance_placeholder as LottieAnimationView).playAnimation()
   }
 
-  override fun updateTokenValue(tokenBalance: Balance) {
+  override fun updateTokenValue(tokenBalance: TokenBalance) {
     if (tokenBalance.token.amount.compareTo(BigDecimal("-1")) == 1) {
       when (tokenBalance.token.currency) {
         APPC_C_CURRENCY -> {

@@ -21,6 +21,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.math.BigDecimal
 import java.util.*
@@ -57,14 +58,15 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
     transaction = intent.getParcelableExtra(TRANSACTION_EXTRA)
     isBackEnable = true
     presenter =
-        IabPresenter(this, autoUpdateInteract, Schedulers.io(), AndroidSchedulers.mainThread())
-
+        IabPresenter(this, autoUpdateInteract, Schedulers.io(), AndroidSchedulers.mainThread(),
+            CompositeDisposable())
     if (savedInstanceState != null) {
       if (savedInstanceState.containsKey(SKU_DETAILS)) {
         skuDetails = savedInstanceState.getBundle(SKU_DETAILS)
       }
+    } else {
+      showPaymentMethodsView()
     }
-    presenter.present(savedInstanceState)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -77,6 +79,13 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
         results!!.accept(Objects.requireNonNull(data!!.data, "Intent data cannot be null!"))
       }
     }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    //The present is set here due to the Can not perform this action after onSaveInstanceState
+    //This assures that doesn't
+    presenter.present()
   }
 
   override fun onBackPressed() {
@@ -97,9 +106,11 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
   }
 
   override fun finish(bundle: Bundle) {
-    setResult(Activity.RESULT_OK, Intent().putExtras(bundle))
     inAppPurchaseInteractor.savePreSelectedPaymentMethod(
         bundle.getString(PRE_SELECTED_PAYMENT_METHOD_KEY))
+    bundle.remove(PRE_SELECTED_PAYMENT_METHOD_KEY)
+
+    setResult(Activity.RESULT_OK, Intent().putExtras(bundle))
     finish()
   }
 
@@ -192,9 +203,10 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
         .commit()
   }
 
-  override fun showEarnAppcoins() {
+  override fun showEarnAppcoins(domain: String, skuId: String?, amount: BigDecimal, type: String) {
     supportFragmentManager.beginTransaction()
-        .replace(R.id.fragment_container, EarnAppcoinsFragment())
+        .replace(R.id.fragment_container,
+            EarnAppcoinsFragment.newInstance(domain, skuId, amount, type))
         .commit()
   }
 
@@ -261,6 +273,11 @@ class IabActivity : BaseActivity(), IabView, UriNavigator {
 
   override fun unlockRotation() {
     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+  }
+
+  override fun onPause() {
+    presenter.stop()
+    super.onPause()
   }
 
   companion object {

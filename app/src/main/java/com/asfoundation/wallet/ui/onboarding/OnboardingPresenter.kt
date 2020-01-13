@@ -13,7 +13,6 @@ import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function3
 import io.reactivex.subjects.ReplaySubject
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class OnboardingPresenter(private val disposables: CompositeDisposable,
@@ -44,8 +43,8 @@ class OnboardingPresenter(private val disposables: CompositeDisposable,
     disposables.add(referralInteractor.getReferralInfo()
         .subscribeOn(networkScheduler)
         .observeOn(viewScheduler)
-        .doOnSuccess { view.updateUI(it.symbol + it.maxAmount.scaleToString(2)) }
-        .subscribe({}, { handlerError(it) })
+        .doOnSuccess { view.updateUI(it.symbol + it.maxAmount.scaleToString(2), it.isActive) }
+        .subscribe({}, { it.printStackTrace() })
     )
   }
 
@@ -186,16 +185,5 @@ class OnboardingPresenter(private val disposables: CompositeDisposable,
                                showAnimation: Boolean) {
     onboardingInteract.clickSkipOnboarding()
     view.finishOnboarding(walletValidationStatus, showAnimation)
-  }
-
-  private fun handlerError(throwable: Throwable) {
-    throwable.printStackTrace()
-    if (isNoNetworkException(throwable)) {
-      view.updateUINoInternet()
-    }
-  }
-
-  private fun isNoNetworkException(throwable: Throwable): Boolean {
-    return throwable is IOException || throwable.cause != null && throwable.cause is IOException
   }
 }

@@ -1,5 +1,7 @@
 package com.asfoundation.wallet.ui.widget.holder;
 
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -10,12 +12,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import com.asf.wallet.R;
+import com.asfoundation.wallet.GlideApp;
 import com.asfoundation.wallet.transactions.Transaction;
 import com.asfoundation.wallet.transactions.TransactionDetails;
 import com.asfoundation.wallet.ui.widget.OnTransactionClickListener;
-import com.asfoundation.wallet.widget.CircleTransformation;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -38,8 +44,10 @@ public class TransactionHolder extends BinderViewHolder<Transaction>
   private Transaction transaction;
   private String defaultAddress;
   private OnTransactionClickListener onTransactionClickListener;
+  private Resources resources;
 
-  public TransactionHolder(int resId, ViewGroup parent, OnTransactionClickListener listener) {
+  public TransactionHolder(int resId, ViewGroup parent, OnTransactionClickListener listener,
+      Resources resources) {
     super(resId, parent);
 
     srcImage = findViewById(R.id.img);
@@ -52,6 +60,7 @@ public class TransactionHolder extends BinderViewHolder<Transaction>
     onTransactionClickListener = listener;
 
     itemView.setOnClickListener(this);
+    this.resources = resources;
   }
 
   @Override public void bind(@Nullable Transaction data, @NonNull Bundle addition) {
@@ -75,7 +84,8 @@ public class TransactionHolder extends BinderViewHolder<Transaction>
   }
 
   private String extractTo(Transaction transaction) {
-    if (transaction.getOperations() != null && !transaction.getOperations()
+    if (transaction.getOperations() != null
+        && !transaction.getOperations()
         .isEmpty()
         && transaction.getOperations()
         .get(0) != null
@@ -91,7 +101,8 @@ public class TransactionHolder extends BinderViewHolder<Transaction>
   }
 
   private String extractFrom(Transaction transaction) {
-    if (transaction.getOperations() != null && !transaction.getOperations()
+    if (transaction.getOperations() != null
+        && !transaction.getOperations()
         .isEmpty()
         && transaction.getOperations()
         .get(0) != null
@@ -179,22 +190,29 @@ public class TransactionHolder extends BinderViewHolder<Transaction>
     }
 
     int finalTransactionTypeIcon = transactionTypeIcon;
-    Picasso.with(getContext())
+
+    GlideApp.with(getContext())
         .load(uri)
-        .transform(new CircleTransformation())
-        .placeholder(finalTransactionTypeIcon)
-        .error(transactionTypeIcon)
-        .fit()
-        .into(srcImage, new Callback() {
-          @Override public void onSuccess() {
-            ((ImageView) typeIcon.findViewById(R.id.icon)).setImageResource(
-                finalTransactionTypeIcon);
+        .apply(RequestOptions.bitmapTransform(new CircleCrop())
+            .placeholder(finalTransactionTypeIcon)
+            .error(transactionTypeIcon))
+        .listener(new RequestListener<Drawable>() {
+
+          @Override public boolean onLoadFailed(@Nullable GlideException e, Object model,
+              Target<Drawable> target, boolean isFirstResource) {
+            typeIcon.setVisibility(View.GONE);
+            return false;
           }
 
-          @Override public void onError() {
-            typeIcon.setVisibility(View.GONE);
+          @Override
+          public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
+              DataSource dataSource, boolean isFirstResource) {
+            ((ImageView) typeIcon.findViewById(R.id.icon)).setImageResource(
+                finalTransactionTypeIcon);
+            return false;
           }
-        });
+        })
+        .into(srcImage);
 
     int statusText = R.string.transaction_status_success;
     int statusColor = R.color.green;

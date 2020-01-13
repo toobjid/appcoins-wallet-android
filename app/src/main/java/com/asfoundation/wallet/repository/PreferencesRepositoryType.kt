@@ -24,4 +24,12 @@ interface PreferencesRepositoryType {
   fun getAutoUpdateCardDismissedVersion(): Single<Int>
   fun getUpdateNotificationSeenTime(): Long
   fun setUpdateNotificationSeenTime(currentTimeMillis: Long)
+  fun getBackupNotificationSeenTime(walletAddress: String): Long
+  fun setBackupNotificationSeenTime(walletAddress: String, currentTimeMillis: Long)
+  fun removeBackupNotificationSeenTime(walletAddress: String)
+  fun isWalletImportBackup(walletAddress: String): Boolean
+  fun setWalletImportBackup(walletAddress: String)
+  fun removeWalletImportBackup(walletAddress: String)
+  fun hasShownBackup(walletAddress: String): Boolean
+  fun setHasShownBackup(walletAddress: String, hasShown: Boolean)
 }

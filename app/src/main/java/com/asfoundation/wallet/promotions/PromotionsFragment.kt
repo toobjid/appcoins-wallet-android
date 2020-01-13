@@ -38,8 +38,9 @@ class PromotionsFragment : DaggerFragment(), PromotionsView {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    presenter = PromotionsPresenter(this, gamification, promotionsInteractor,
-        CompositeDisposable(), Schedulers.io(), AndroidSchedulers.mainThread())
+    presenter =
+        PromotionsPresenter(this, promotionsInteractor, CompositeDisposable(), Schedulers.io(),
+            AndroidSchedulers.mainThread())
   }
 
   override fun onAttach(context: Context) {
@@ -153,22 +154,32 @@ class PromotionsFragment : DaggerFragment(), PromotionsView {
   }
 
   override fun showReferralCard() {
+    no_promotions.visibility = GONE
     no_network.visibility = GONE
     promotions_container.visibility = VISIBLE
     referrals_card.visibility = VISIBLE
   }
 
   override fun showGamificationCard() {
+    no_promotions.visibility = GONE
     no_network.visibility = GONE
     promotions_container.visibility = VISIBLE
     gamification_card.visibility = VISIBLE
   }
 
   override fun showNetworkErrorView() {
+    no_promotions.visibility = GONE
     no_network.visibility = VISIBLE
     retry_button.visibility = VISIBLE
     retry_animation.visibility = GONE
     promotions_container.visibility = GONE
+  }
+
+  override fun showNoPromotionsScreen() {
+    no_network.visibility = GONE
+    retry_animation.visibility = GONE
+    promotions_container.visibility = GONE
+    no_promotions.visibility = VISIBLE
   }
 
   override fun showRetryAnimation() {
@@ -197,5 +208,11 @@ class PromotionsFragment : DaggerFragment(), PromotionsView {
   override fun onPause() {
     presenter.stop()
     super.onPause()
+  }
+
+  companion object {
+    fun newInstance(): PromotionsFragment {
+      return PromotionsFragment()
+    }
   }
 }
