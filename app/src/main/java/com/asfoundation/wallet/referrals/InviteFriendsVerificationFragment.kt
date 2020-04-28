@@ -65,16 +65,16 @@ class InviteFriendsVerificationFragment : DaggerFragment(), InviteFriendsVerific
   }
 
   val amount: BigDecimal by lazy {
-    if (arguments!!.containsKey(AMOUNT)) {
-      arguments!!.getSerializable(AMOUNT) as BigDecimal
+    if (requireArguments().containsKey(AMOUNT)) {
+      requireArguments().getSerializable(AMOUNT) as BigDecimal
     } else {
       throw IllegalArgumentException("Amount not found")
     }
   }
 
   val currency: String by lazy {
-    if (arguments!!.containsKey(CURRENCY)) {
-      arguments!!.getString(CURRENCY)
+    if (requireArguments().containsKey(CURRENCY)) {
+      requireArguments().getString(CURRENCY)!!
     } else {
       throw IllegalArgumentException("Currency not found")
     }

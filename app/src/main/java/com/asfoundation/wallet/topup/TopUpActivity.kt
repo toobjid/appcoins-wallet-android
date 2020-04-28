@@ -112,9 +112,9 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
   override fun finish(data: Bundle) {
     supportFragmentManager.beginTransaction()
         .replace(R.id.fragment_container,
-            TopUpSuccessFragment.newInstance(data.getString(TOP_UP_AMOUNT),
-                data.getString(TOP_UP_CURRENCY), data.getString(BONUS), data.getString(
-                TOP_UP_CURRENCY_SYMBOL)),
+            TopUpSuccessFragment.newInstance(data.getString(TOP_UP_AMOUNT)!!,
+                data.getString(TOP_UP_CURRENCY)!!, data.getString(BONUS)!!,
+                data.getString(TOP_UP_CURRENCY_SYMBOL)!!),
             TopUpSuccessFragment::class.java.simpleName)
         .commit()
     unlockRotation()

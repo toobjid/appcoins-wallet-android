@@ -53,10 +53,10 @@ class AdyenResponseMapper {
       val retrofitMessage = throwable.response()
           ?.errorBody()
           ?.string()
-      if (retrofitMessage.isNullOrBlank()) {
-        message = throwable.message
+      message = if (retrofitMessage.isNullOrBlank()) {
+        throwable.message
       } else {
-        message = retrofitMessage
+        retrofitMessage
       }
     } else {
       code = null

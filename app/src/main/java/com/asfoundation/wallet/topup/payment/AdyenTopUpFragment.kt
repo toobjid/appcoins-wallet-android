@@ -104,7 +104,7 @@ class AdyenTopUpFragment : DaggerFragment(), AdyenTopUpView {
 
     presenter =
         AdyenTopUpPresenter(this, appPackage, AndroidSchedulers.mainThread(), Schedulers.io(),
-            CompositeDisposable(), RedirectComponent.getReturnUrl(context!!), paymentType,
+            CompositeDisposable(), RedirectComponent.getReturnUrl(requireContext()), paymentType,
             transactionType, data.currency.fiatValue, data.currency.fiatCurrencyCode, data.currency,
             data.selectedCurrency, navigator, inAppPurchaseInteractor.billingMessagesMapper,
             adyenPaymentInteractor, bonusValue, AdyenErrorCodeMapper(), gamificationLevel,
@@ -490,56 +490,52 @@ class AdyenTopUpFragment : DaggerFragment(), AdyenTopUpView {
   }
 
   private val appPackage: String by lazy {
-    if (activity != null) {
-      activity!!.packageName
-    } else {
-      throw IllegalArgumentException("previous app package name not found")
-    }
+    requireActivity().packageName
   }
 
   private val data: TopUpData by lazy {
-    if (arguments!!.containsKey(PAYMENT_DATA)) {
-      arguments!!.getSerializable(PAYMENT_DATA) as TopUpData
+    if (requireArguments().containsKey(PAYMENT_DATA)) {
+      requireArguments().getSerializable(PAYMENT_DATA) as TopUpData
     } else {
       throw IllegalArgumentException("previous payment data not found")
     }
   }
 
   private val paymentType: String by lazy {
-    if (arguments!!.containsKey(PAYMENT_TYPE)) {
-      arguments!!.getString(PAYMENT_TYPE)
+    if (requireArguments().containsKey(PAYMENT_TYPE)) {
+      requireArguments().getString(PAYMENT_TYPE)!!
     } else {
       throw IllegalArgumentException("Payment Type not found")
     }
   }
 
   private val transactionType: String by lazy {
-    if (arguments!!.containsKey(PAYMENT_TRANSACTION_TYPE)) {
-      arguments!!.getString(PAYMENT_TRANSACTION_TYPE)
+    if (requireArguments().containsKey(PAYMENT_TRANSACTION_TYPE)) {
+      requireArguments().getString(PAYMENT_TRANSACTION_TYPE)!!
     } else {
       throw IllegalArgumentException("Transaction type not found")
     }
   }
 
   private val currentCurrency: String by lazy {
-    if (arguments!!.containsKey(PAYMENT_CURRENT_CURRENCY)) {
-      arguments!!.getString(PAYMENT_CURRENT_CURRENCY)
+    if (requireArguments().containsKey(PAYMENT_CURRENT_CURRENCY)) {
+      requireArguments().getString(PAYMENT_CURRENT_CURRENCY)!!
     } else {
       throw IllegalArgumentException("Payment main currency not found")
     }
   }
 
   private val bonusValue: String by lazy {
-    if (arguments!!.containsKey(BONUS)) {
-      arguments!!.getString(BONUS)
+    if (requireArguments().containsKey(BONUS)) {
+      requireArguments().getString(BONUS)!!
     } else {
       throw IllegalArgumentException("Bonus not found")
     }
   }
 
   private val gamificationLevel: Int by lazy {
-    if (arguments!!.containsKey(GAMIFICATION_LEVEL)) {
-      arguments!!.getInt(GAMIFICATION_LEVEL)
+    if (requireArguments().containsKey(GAMIFICATION_LEVEL)) {
+      requireArguments().getInt(GAMIFICATION_LEVEL)
     } else {
       throw IllegalArgumentException("gamification level data not found")
     }

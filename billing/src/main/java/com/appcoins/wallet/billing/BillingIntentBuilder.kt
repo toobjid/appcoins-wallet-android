@@ -53,14 +53,13 @@ class BillingIntentBuilder(val context: Context) {
         PayloadHelper.getOrigin(payload)))
 
 
-    val intent = Intent(Intent.ACTION_VIEW).apply {
+    return Intent(Intent.ACTION_VIEW).apply {
       data = uri
       putExtra(AppcoinsBillingBinder.PRODUCT_NAME, skuTitle)
       putExtra(EXTRA_DEVELOPER_PAYLOAD, payload)
       putExtra(EXTRA_BDS_IAP, bdsIap)
       setPackage(context.packageName)
     }
-    return intent
   }
 
   private fun buildUriString(tokenContractAddress: String, iabContractAddress: String,

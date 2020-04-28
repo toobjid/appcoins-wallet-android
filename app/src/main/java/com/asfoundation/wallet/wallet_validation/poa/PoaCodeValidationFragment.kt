@@ -44,32 +44,32 @@ class PoaCodeValidationFragment : DaggerFragment(),
   private lateinit var clipboard: ClipboardManager
 
   val countryCode: String by lazy {
-    if (arguments!!.containsKey(PoaPhoneValidationFragment.COUNTRY_CODE)) {
-      arguments!!.getString(PoaPhoneValidationFragment.COUNTRY_CODE)
+    if (requireArguments().containsKey(PoaPhoneValidationFragment.COUNTRY_CODE)) {
+      requireArguments().getString(PoaPhoneValidationFragment.COUNTRY_CODE)!!
     } else {
       throw IllegalArgumentException("Country Code not passed")
     }
   }
 
   val phoneNumber: String by lazy {
-    if (arguments!!.containsKey(PoaPhoneValidationFragment.PHONE_NUMBER)) {
-      arguments!!.getString(PoaPhoneValidationFragment.PHONE_NUMBER)
+    if (requireArguments().containsKey(PoaPhoneValidationFragment.PHONE_NUMBER)) {
+      requireArguments().getString(PoaPhoneValidationFragment.PHONE_NUMBER)!!
     } else {
       throw IllegalArgumentException("Phone Number not passed")
     }
   }
 
   private val errorMessage: Int? by lazy {
-    if (arguments!!.containsKey(ERROR_MESSAGE)) {
-      arguments!!.getInt(ERROR_MESSAGE)
+    if (requireArguments().containsKey(ERROR_MESSAGE)) {
+      requireArguments().getInt(ERROR_MESSAGE)
     } else {
       null
     }
   }
 
   private val validationInfo: ValidationInfo? by lazy {
-    if (arguments!!.containsKey(VALIDATION_INFO)) {
-      arguments!!.getSerializable(VALIDATION_INFO) as ValidationInfo
+    if (requireArguments().containsKey(VALIDATION_INFO)) {
+      requireArguments().getSerializable(VALIDATION_INFO) as ValidationInfo
     } else {
       null
     }
@@ -78,7 +78,7 @@ class PoaCodeValidationFragment : DaggerFragment(),
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    clipboard = context!!.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
 
     presenter =
         PoaCodeValidationPresenter(this, walletValidationView, smsValidationInteract,

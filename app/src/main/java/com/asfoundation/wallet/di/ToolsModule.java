@@ -878,16 +878,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Singleton @Provides BalanceGetter provideBalanceGetter(AppcoinsRewards appcoinsRewards) {
-    return new BalanceGetter() {
-      @Override public @NotNull Single<BigDecimal> getBalance(@NotNull String address) {
-        return appcoinsRewards.getBalance(address)
-            .subscribeOn(Schedulers.io());
-      }
-
-      @Override public @NotNull Single<BigDecimal> getBalance() {
-        return null;
-      }
-    };
+    return address -> appcoinsRewards.getBalance(address)
+        .subscribeOn(Schedulers.io());
   }
 
   @Singleton @Provides AnalyticsAPI provideAnalyticsAPI(OkHttpClient client,

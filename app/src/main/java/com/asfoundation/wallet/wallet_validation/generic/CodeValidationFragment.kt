@@ -58,30 +58,24 @@ class CodeValidationFragment : DaggerFragment(),
   }
 
   val countryCode: String by lazy {
-    if (arguments!!.containsKey(
-            PhoneValidationFragment.COUNTRY_CODE)) {
-      arguments!!.getString(
-          PhoneValidationFragment.COUNTRY_CODE)
+    if (requireArguments().containsKey(PhoneValidationFragment.COUNTRY_CODE)) {
+      requireArguments().getString(PhoneValidationFragment.COUNTRY_CODE)!!
     } else {
       throw IllegalArgumentException("Country Code not passed")
     }
   }
 
   val phoneNumber: String by lazy {
-    if (arguments!!.containsKey(
-            PhoneValidationFragment.PHONE_NUMBER)) {
-      arguments!!.getString(
-          PhoneValidationFragment.PHONE_NUMBER)
+    if (requireArguments().containsKey(PhoneValidationFragment.PHONE_NUMBER)) {
+      requireArguments().getString(PhoneValidationFragment.PHONE_NUMBER)!!
     } else {
       throw IllegalArgumentException("Phone Number not passed")
     }
   }
 
   private val errorMessage: Int? by lazy {
-    if (arguments!!.containsKey(
-            ERROR_MESSAGE)) {
-      arguments!!.getInt(
-          ERROR_MESSAGE)
+    if (requireArguments().containsKey(ERROR_MESSAGE)) {
+      requireArguments().getInt(ERROR_MESSAGE)
     } else {
       null
     }

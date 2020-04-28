@@ -111,20 +111,16 @@ class EarnAppcoinsFragment : DaggerFragment(), EarnAppcoinsView {
   }
 
   val domain: String by lazy {
-    if (arguments!!.containsKey(
-            PARAM_DOMAIN)) {
-      arguments!!.getString(
-          PARAM_DOMAIN)
+    if (requireArguments().containsKey(PARAM_DOMAIN)) {
+      requireArguments().getString(PARAM_DOMAIN)!!
     } else {
       throw IllegalArgumentException("Domain not found")
     }
   }
 
   val skuId: String? by lazy {
-    if (arguments!!.containsKey(
-            PARAM_SKUID)) {
-      val value = arguments!!.getString(
-          PARAM_SKUID) ?: return@lazy null
+    if (requireArguments().containsKey(PARAM_SKUID)) {
+      val value = requireArguments().getString(PARAM_SKUID) ?: return@lazy null
       value
     } else {
       throw IllegalArgumentException("SkuId not found")
@@ -132,9 +128,8 @@ class EarnAppcoinsFragment : DaggerFragment(), EarnAppcoinsView {
   }
 
   val amount: BigDecimal by lazy {
-    if (arguments!!.containsKey(
-            PARAM_AMOUNT)) {
-      val value = arguments!!.getSerializable(
+    if (requireArguments().containsKey(PARAM_AMOUNT)) {
+      val value = requireArguments().getSerializable(
           PARAM_AMOUNT) as BigDecimal
       value
     } else {
@@ -143,8 +138,8 @@ class EarnAppcoinsFragment : DaggerFragment(), EarnAppcoinsView {
   }
 
   val type: String by lazy {
-    if (arguments!!.containsKey(PARAM_TRANSACTION_TYPE)) {
-      arguments!!.getString(PARAM_TRANSACTION_TYPE)
+    if (requireArguments().containsKey(PARAM_TRANSACTION_TYPE)) {
+      requireArguments().getString(PARAM_TRANSACTION_TYPE)!!
     } else {
       throw IllegalArgumentException("type not found")
     }

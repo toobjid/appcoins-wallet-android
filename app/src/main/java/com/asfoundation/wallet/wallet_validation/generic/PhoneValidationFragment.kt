@@ -189,13 +189,13 @@ class PhoneValidationFragment : DaggerFragment(),
     return RxView.clicks(next_button)
         .map {
           PhoneValidationClickData(ccp.selectedCountryCodeWithPlus,
-              ccp.fullNumber.substringAfter(ccp.selectedCountryCode), previousContext ?: "")
+              ccp.fullNumber.substringAfter(ccp.selectedCountryCode), previousContext)
         }
   }
 
   override fun getCancelClicks(): Observable<PhoneValidationClickData> {
     return RxView.clicks(cancel_button)
-        .map { PhoneValidationClickData("", "", previousContext ?: "") }
+        .map { PhoneValidationClickData("", "", previousContext) }
   }
 
   override fun onDestroy() {

@@ -44,7 +44,7 @@ class AutoUpdateInteract(private val autoUpdateRepository: AutoUpdateRepository,
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     val appsList =
         packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-    appsList?.let {
+    appsList.run {
       for (info in appsList) {
         if (info.activityInfo.packageName == "cm.aptoide.pt") {
           intent.setPackage(info.activityInfo.packageName)

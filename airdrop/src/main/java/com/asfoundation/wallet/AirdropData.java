@@ -1,5 +1,6 @@
 package com.asfoundation.wallet;
 
+import java.util.Objects;
 import org.jetbrains.annotations.Nullable;
 
 public class AirdropData {
@@ -45,7 +46,7 @@ public class AirdropData {
 
     if (networkId != airdrop.networkId) return false;
     if (status != airdrop.status) return false;
-    return message != null ? message.equals(airdrop.message) : airdrop.message == null;
+    return Objects.equals(message, airdrop.message);
   }
 
   @Override public String toString() {

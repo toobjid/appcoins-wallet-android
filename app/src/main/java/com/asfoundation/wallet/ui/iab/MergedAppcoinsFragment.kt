@@ -103,91 +103,91 @@ class MergedAppcoinsFragment : DaggerFragment(), MergedAppcoinsView {
   lateinit var formatter: CurrencyFormatUtils
 
   private val fiatAmount: BigDecimal by lazy {
-    if (arguments!!.containsKey(FIAT_AMOUNT_KEY)) {
-      arguments!!.getSerializable(FIAT_AMOUNT_KEY) as BigDecimal
+    if (requireArguments().containsKey(FIAT_AMOUNT_KEY)) {
+      requireArguments().getSerializable(FIAT_AMOUNT_KEY) as BigDecimal
     } else {
       throw IllegalArgumentException("amount data not found")
     }
   }
   private val currency: String by lazy {
-    if (arguments!!.containsKey(FIAT_CURRENCY_KEY)) {
-      arguments!!.getString(FIAT_CURRENCY_KEY)
+    if (requireArguments().containsKey(FIAT_CURRENCY_KEY)) {
+      requireArguments().getString(FIAT_CURRENCY_KEY)!!
     } else {
       throw IllegalArgumentException("currency data not found")
     }
   }
 
   private val bonus: String by lazy {
-    if (arguments!!.containsKey(BONUS_KEY)) {
-      arguments!!.getString(BONUS_KEY)
+    if (requireArguments().containsKey(BONUS_KEY)) {
+      requireArguments().getString(BONUS_KEY)!!
     } else {
       throw IllegalArgumentException("bonus data not found")
     }
   }
 
   private val appName: String by lazy {
-    if (arguments!!.containsKey(APP_NAME_KEY)) {
-      arguments!!.getString(APP_NAME_KEY)
+    if (requireArguments().containsKey(APP_NAME_KEY)) {
+      requireArguments().getString(APP_NAME_KEY)!!
     } else {
       throw IllegalArgumentException("app name data not found")
     }
   }
 
   private val productName: String? by lazy {
-    if (arguments!!.containsKey(PRODUCT_NAME_KEY)) {
-      arguments!!.getString(PRODUCT_NAME_KEY)
+    if (requireArguments().containsKey(PRODUCT_NAME_KEY)) {
+      requireArguments().getString(PRODUCT_NAME_KEY)!!
     } else {
       throw IllegalArgumentException("product name data not found")
     }
   }
 
   private val appcAmount: BigDecimal by lazy {
-    if (arguments!!.containsKey(APPC_AMOUNT_KEY)) {
-      arguments!!.getSerializable(APPC_AMOUNT_KEY) as BigDecimal
+    if (requireArguments().containsKey(APPC_AMOUNT_KEY)) {
+      requireArguments().getSerializable(APPC_AMOUNT_KEY) as BigDecimal
     } else {
       throw IllegalArgumentException("appc data not found")
     }
   }
 
   private val appcEnabled: Boolean by lazy {
-    if (arguments!!.containsKey(APPC_ENABLED_KEY)) {
-      arguments!!.getBoolean(APPC_ENABLED_KEY)
+    if (requireArguments().containsKey(APPC_ENABLED_KEY)) {
+      requireArguments().getBoolean(APPC_ENABLED_KEY)
     } else {
       throw IllegalArgumentException("appc enable data not found")
     }
   }
 
   private val creditsEnabled: Boolean by lazy {
-    if (arguments!!.containsKey(CREDITS_ENABLED_KEY)) {
-      arguments!!.getBoolean(CREDITS_ENABLED_KEY)
+    if (requireArguments().containsKey(CREDITS_ENABLED_KEY)) {
+      requireArguments().getBoolean(CREDITS_ENABLED_KEY)
     } else {
       throw IllegalArgumentException("credits enable data not found")
     }
   }
 
   private val isBds: Boolean by lazy {
-    if (arguments!!.containsKey(IS_BDS_KEY)) {
-      arguments!!.getBoolean(IS_BDS_KEY)
+    if (requireArguments().containsKey(IS_BDS_KEY)) {
+      requireArguments().getBoolean(IS_BDS_KEY)
     } else {
       throw IllegalArgumentException("is bds data not found")
     }
   }
 
   private val isDonation: Boolean by lazy {
-    if (arguments!!.containsKey(IS_DONATION_KEY)) {
-      arguments!!.getBoolean(IS_DONATION_KEY)
+    if (requireArguments().containsKey(IS_DONATION_KEY)) {
+      requireArguments().getBoolean(IS_DONATION_KEY)
     } else {
       throw IllegalArgumentException("is donation data not found")
     }
   }
 
   private val skuId: String? by lazy {
-    arguments!!.getString(SKU_ID)
+    requireArguments().getString(SKU_ID)
   }
 
   private val transactionType: String by lazy {
-    if (arguments!!.containsKey(TRANSACTION_TYPE)) {
-      arguments!!.getString(TRANSACTION_TYPE)
+    if (requireArguments().containsKey(TRANSACTION_TYPE)) {
+      requireArguments().getString(TRANSACTION_TYPE)!!
     } else {
       throw IllegalArgumentException("transaction type data not found")
     }
@@ -264,7 +264,7 @@ class MergedAppcoinsFragment : DaggerFragment(), MergedAppcoinsView {
       app_sku_description.text = productName
     }
     try {
-      app_icon.setImageDrawable(context!!.packageManager
+      app_icon.setImageDrawable(requireContext().packageManager
           .getApplicationIcon(appName))
     } catch (e: PackageManager.NameNotFoundException) {
       e.printStackTrace()
@@ -290,9 +290,9 @@ class MergedAppcoinsFragment : DaggerFragment(), MergedAppcoinsView {
     } else {
       appcoins_radio.message.text = getString(R.string.purchase_appcoins_noavailable_body)
       appcoins_radio.title.setTextColor(
-          ContextCompat.getColor(context!!, R.color.btn_disable_snd_color))
+          ContextCompat.getColor(requireContext(), R.color.btn_disable_snd_color))
       appcoins_radio.message.setTextColor(
-          ContextCompat.getColor(context!!, R.color.btn_disable_snd_color))
+          ContextCompat.getColor(requireContext(), R.color.btn_disable_snd_color))
       appcoins_bonus_layout?.setBackgroundResource(R.drawable.disable_bonus_img_background)
       appcoins_radio.message.visibility = VISIBLE
       appc_balances_group.visibility = INVISIBLE
@@ -316,7 +316,7 @@ class MergedAppcoinsFragment : DaggerFragment(), MergedAppcoinsView {
   }
 
   private fun getApplicationName(appPackage: String): CharSequence {
-    val packageManager = context!!.packageManager
+    val packageManager = requireContext().packageManager
     val packageInfo = packageManager.getApplicationInfo(appPackage, 0)
     return packageManager.getApplicationLabel(packageInfo)
   }

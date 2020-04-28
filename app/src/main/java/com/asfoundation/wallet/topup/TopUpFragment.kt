@@ -104,8 +104,8 @@ class TopUpFragment : DaggerFragment(), TopUpFragmentView {
   }
 
   private val appPackage: String by lazy {
-    if (arguments!!.containsKey(PARAM_APP_PACKAGE)) {
-      arguments!!.getString(PARAM_APP_PACKAGE)
+    if (requireArguments().containsKey(PARAM_APP_PACKAGE)) {
+      requireArguments().getString(PARAM_APP_PACKAGE)!!
     } else {
       throw IllegalArgumentException("application package name data not found")
     }

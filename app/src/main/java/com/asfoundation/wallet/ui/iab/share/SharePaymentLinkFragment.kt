@@ -28,6 +28,7 @@ class SharePaymentLinkFragment : DaggerFragment(),
 
   lateinit var presenter: SharePaymentLinkPresenter
   private var iabView: IabView? = null
+
   @Inject
   lateinit var analytics: BillingAnalytics
 
@@ -60,56 +61,48 @@ class SharePaymentLinkFragment : DaggerFragment(),
   }
 
   val domain: String by lazy {
-    if (arguments!!.containsKey(
-            PARAM_DOMAIN)) {
-      arguments!!.getString(
-          PARAM_DOMAIN)
+    if (requireArguments().containsKey(PARAM_DOMAIN)) {
+      requireArguments().getString(PARAM_DOMAIN)!!
     } else {
       throw IllegalArgumentException("Domain not found")
     }
   }
 
   val paymentMethod: String by lazy {
-    if (arguments!!.containsKey(PARAM_PAYMENT_KEY)) {
-      arguments!!.getString(PARAM_PAYMENT_KEY)
+    if (requireArguments().containsKey(PARAM_PAYMENT_KEY)) {
+      requireArguments().getString(PARAM_PAYMENT_KEY)!!
     } else {
       throw IllegalArgumentException("paymentMethod not found")
     }
   }
 
   val type: String by lazy {
-    if (arguments!!.containsKey(PARAM_TRANSACTION_TYPE)) {
-      arguments!!.getString(PARAM_TRANSACTION_TYPE)
+    if (requireArguments().containsKey(PARAM_TRANSACTION_TYPE)) {
+      requireArguments().getString(PARAM_TRANSACTION_TYPE)!!
     } else {
       throw IllegalArgumentException("type not found")
     }
   }
 
   private val originalAmount: String? by lazy {
-    if (arguments!!.containsKey(
-            PARAM_ORIGINAL_AMOUNT)) {
-      arguments!!.getString(
-          PARAM_ORIGINAL_AMOUNT)
+    if (requireArguments().containsKey(PARAM_ORIGINAL_AMOUNT)) {
+      requireArguments().getString(PARAM_ORIGINAL_AMOUNT)
     } else {
       throw IllegalArgumentException("Original amount not found")
     }
   }
 
   private val originalCurrency: String? by lazy {
-    if (arguments!!.containsKey(
-            PARAM_ORIGINAL_CURRENCY)) {
-      arguments!!.getString(
-          PARAM_ORIGINAL_CURRENCY)
+    if (requireArguments().containsKey(PARAM_ORIGINAL_CURRENCY)) {
+      requireArguments().getString(PARAM_ORIGINAL_CURRENCY)
     } else {
       throw IllegalArgumentException("Domain not found")
     }
   }
 
   val skuId: String? by lazy {
-    if (arguments!!.containsKey(
-            PARAM_SKUID)) {
-      val value = arguments!!.getString(
-          PARAM_SKUID) ?: return@lazy null
+    if (requireArguments().containsKey(PARAM_SKUID)) {
+      val value = requireArguments().getString(PARAM_SKUID) ?: return@lazy null
       value
     } else {
       throw IllegalArgumentException("SkuId not found")
@@ -117,10 +110,8 @@ class SharePaymentLinkFragment : DaggerFragment(),
   }
 
   val amount: BigDecimal by lazy {
-    if (arguments!!.containsKey(
-            PARAM_AMOUNT)) {
-      val value = arguments!!.getSerializable(
-          PARAM_AMOUNT) as BigDecimal
+    if (requireArguments().containsKey(PARAM_AMOUNT)) {
+      val value = requireArguments().getSerializable(PARAM_AMOUNT) as BigDecimal
       value
     } else {
       throw IllegalArgumentException("amount not found")
@@ -170,7 +161,8 @@ class SharePaymentLinkFragment : DaggerFragment(),
         .map {
           val message = if (note.text.isNotEmpty()) note.text.toString() else null
           SharePaymentLinkFragmentView.SharePaymentData(domain, skuId, message, originalAmount,
-              originalCurrency, paymentMethod, amount.toFloat().toString(), type)
+              originalCurrency, paymentMethod, amount.toFloat()
+              .toString(), type)
         }
   }
 
@@ -179,7 +171,8 @@ class SharePaymentLinkFragment : DaggerFragment(),
         .map {
           val message = if (note.text.isNotEmpty()) note.text.toString() else null
           SharePaymentLinkFragmentView.SharePaymentData(domain, skuId, message, originalAmount,
-              originalCurrency, paymentMethod, amount.toFloat().toString(), type)
+              originalCurrency, paymentMethod, amount.toFloat()
+              .toString(), type)
         }
   }
 

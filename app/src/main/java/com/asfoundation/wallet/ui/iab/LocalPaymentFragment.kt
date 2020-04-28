@@ -84,110 +84,110 @@ class LocalPaymentFragment : DaggerFragment(), LocalPaymentView {
   }
 
   private val domain: String by lazy {
-    if (arguments!!.containsKey(DOMAIN_KEY)) {
-      arguments!!.getString(DOMAIN_KEY)
+    if (requireArguments().containsKey(DOMAIN_KEY)) {
+      requireArguments().getString(DOMAIN_KEY)!!
     } else {
       throw IllegalArgumentException("domain data not found")
     }
   }
   private val skudId: String? by lazy {
-    if (arguments!!.containsKey(SKU_ID_KEY)) {
-      arguments!!.getString(SKU_ID_KEY)
+    if (requireArguments().containsKey(SKU_ID_KEY)) {
+      requireArguments().getString(SKU_ID_KEY)
     } else {
       throw IllegalArgumentException("skuId data not found")
     }
   }
   private val originalAmount: String? by lazy {
-    if (arguments!!.containsKey(ORIGINAL_AMOUNT_KEY)) {
-      arguments!!.getString(ORIGINAL_AMOUNT_KEY)
+    if (requireArguments().containsKey(ORIGINAL_AMOUNT_KEY)) {
+      requireArguments().getString(ORIGINAL_AMOUNT_KEY)
     } else {
       throw IllegalArgumentException("original amount data not found")
     }
   }
 
   private val bonus: String? by lazy {
-    if (arguments!!.containsKey(BONUS_KEY)) {
-      arguments!!.getString(BONUS_KEY)
+    if (requireArguments().containsKey(BONUS_KEY)) {
+      requireArguments().getString(BONUS_KEY)
     } else {
       throw IllegalArgumentException("bonus amount data not found")
     }
   }
 
   private val paymentId: String by lazy {
-    if (arguments!!.containsKey(PAYMENT_KEY)) {
-      arguments!!.getString(PAYMENT_KEY)
+    if (requireArguments().containsKey(PAYMENT_KEY)) {
+      requireArguments().getString(PAYMENT_KEY)!!
     } else {
       throw IllegalArgumentException("payment method data not found")
     }
   }
 
   private val currency: String? by lazy {
-    if (arguments!!.containsKey(CURRENCY_KEY)) {
-      arguments!!.getString(CURRENCY_KEY)
+    if (requireArguments().containsKey(CURRENCY_KEY)) {
+      requireArguments().getString(CURRENCY_KEY)!!
     } else {
       throw IllegalArgumentException("currency data not found")
     }
   }
 
   private val developerAddress: String by lazy {
-    if (arguments!!.containsKey(DEV_ADDRESS_KEY)) {
-      arguments!!.getString(DEV_ADDRESS_KEY)
+    if (requireArguments().containsKey(DEV_ADDRESS_KEY)) {
+      requireArguments().getString(DEV_ADDRESS_KEY)!!
     } else {
       throw IllegalArgumentException("dev address data not found")
     }
   }
 
   private val type: String by lazy {
-    if (arguments!!.containsKey(TYPE_KEY)) {
-      arguments!!.getString(TYPE_KEY)
+    if (requireArguments().containsKey(TYPE_KEY)) {
+      requireArguments().getString(TYPE_KEY)!!
     } else {
       throw IllegalArgumentException("type data not found")
     }
   }
 
   private val amount: BigDecimal by lazy {
-    if (arguments!!.containsKey(AMOUNT_KEY)) {
-      arguments!!.getSerializable(AMOUNT_KEY) as BigDecimal
+    if (requireArguments().containsKey(AMOUNT_KEY)) {
+      requireArguments().getSerializable(AMOUNT_KEY) as BigDecimal
     } else {
       throw IllegalArgumentException("amount data not found")
     }
   }
 
   private val orderReference: String? by lazy {
-    if (arguments!!.containsKey(ORDER_REFERENCE)) {
-      arguments!!.getString(ORDER_REFERENCE)
+    if (requireArguments().containsKey(ORDER_REFERENCE)) {
+      requireArguments().getString(ORDER_REFERENCE)
     } else {
       throw IllegalArgumentException("dev address data not found")
     }
   }
 
   private val callbackUrl: String? by lazy {
-    if (arguments!!.containsKey(CALLBACK_URL)) {
-      arguments!!.getString(CALLBACK_URL)
+    if (requireArguments().containsKey(CALLBACK_URL)) {
+      requireArguments().getString(CALLBACK_URL)
     } else {
       throw IllegalArgumentException("dev address data not found")
     }
   }
 
   private val payload: String? by lazy {
-    if (arguments!!.containsKey(PAYLOAD)) {
-      arguments!!.getString(PAYLOAD)
+    if (requireArguments().containsKey(PAYLOAD)) {
+      requireArguments().getString(PAYLOAD)
     } else {
       throw IllegalArgumentException("dev address data not found")
     }
   }
 
   private val paymentMethodIconUrl: String? by lazy {
-    if (arguments!!.containsKey(PAYMENT_METHOD_URL)) {
-      arguments!!.getString(PAYMENT_METHOD_URL)
+    if (requireArguments().containsKey(PAYMENT_METHOD_URL)) {
+      requireArguments().getString(PAYMENT_METHOD_URL)
     } else {
       throw IllegalArgumentException("payment method icon url not found")
     }
   }
 
   private val paymentMethodIconLabel: String? by lazy {
-    if (arguments!!.containsKey(PAYMENT_METHOD_LABEL)) {
-      arguments!!.getString(PAYMENT_METHOD_LABEL)
+    if (requireArguments().containsKey(PAYMENT_METHOD_LABEL)) {
+      requireArguments().getString(PAYMENT_METHOD_LABEL)
     } else {
       throw IllegalArgumentException("payment method icon label not found")
     }
@@ -195,6 +195,7 @@ class LocalPaymentFragment : DaggerFragment(), LocalPaymentView {
 
   @Inject
   lateinit var localPaymentInteractor: LocalPaymentInteractor
+
   @Inject
   lateinit var analytics: LocalPaymentAnalytics
   private lateinit var iabView: IabView
