@@ -81,7 +81,7 @@ class OneStepTransactionParserTest {
             billing, conversionService,
             MemoryCache(BehaviorSubject.create(), HashMap()), defaultTokenProvider)
 
-    val parameters = HashMap<String, String>()
+    val parameters = HashMap<String, String?>()
     parameters["value"] = priceValue
     parameters["currency"] = currency
     parameters["domain"] = packageName
@@ -123,7 +123,7 @@ class OneStepTransactionParserTest {
             billing, conversionService,
             MemoryCache(BehaviorSubject.create(), HashMap()), defaultTokenProvider)
 
-    val parameters = HashMap<String, String>()
+    val parameters = HashMap<String, String?>()
     parameters["value"] = priceValue
     parameters["domain"] = packageName
 
@@ -156,7 +156,7 @@ class OneStepTransactionParserTest {
             billing, conversionService,
             MemoryCache(BehaviorSubject.create(), HashMap()), defaultTokenProvider)
 
-    val parameters = HashMap<String, String>()
+    val parameters = HashMap<String, String?>()
     parameters["value"] = priceValue
     parameters["currency"] = "EUR"
     parameters["domain"] = packageName
