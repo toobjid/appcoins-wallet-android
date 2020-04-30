@@ -22,10 +22,10 @@ class PayloadCustomParser {
         .firstOrNull()
         ?.first
 
-    if (value != null) {
-      return uriString.substring(indexOfPayloadValue, value - 1)
+    return if (value != null) {
+      uriString.substring(indexOfPayloadValue, value - 1)
     } else {
-      return uriString.substring(indexOfPayloadValue)
+      uriString.substring(indexOfPayloadValue)
     }
   }
 }
