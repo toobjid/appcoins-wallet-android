@@ -16,9 +16,9 @@ import org.jetbrains.annotations.Nullable;
  */
 public class PayloadHelper {
   private static final String SCHEME = "appcoins";
-  private static final String PAYLOAD_PARAMETER = "payload";
-  private static final String ORDER_PARAMETER = "order_reference";
-  private static final String ORIGIN_PARAMETER = "origin";
+  static final String PAYLOAD_PARAMETER = "payload";
+  static final String ORDER_PARAMETER = "order_reference";
+  static final String ORIGIN_PARAMETER = "origin";
 
   /**
    * Method to build the payload required on the {@link AppcoinsBilling#getBuyIntent} method.
@@ -58,7 +58,13 @@ public class PayloadHelper {
   public static String getPayload(String uriString) {
     Uri uri = checkRequirements(uriString);
     if (uri == null) return null;
-    return uri.getQueryParameter(PAYLOAD_PARAMETER);
+    String queryParameter = uri.getQueryParameter(PAYLOAD_PARAMETER);
+
+    if ((queryParameter != null) && queryParameter.isEmpty()) {
+      return new PayloadCustomParser().getPayload(uriString);
+    } else {
+      return queryParameter;
+    }
   }
 
   @Nullable private static Uri checkRequirements(String uriString) {
