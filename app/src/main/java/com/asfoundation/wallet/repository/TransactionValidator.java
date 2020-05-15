@@ -1,7 +1,7 @@
 package com.asfoundation.wallet.repository;
 
-import io.reactivex.Completable;
+import io.reactivex.Single;
 
 public interface TransactionValidator {
-  Completable validate(PaymentTransaction paymentTransaction);
+  Single<String> validate(PaymentTransaction paymentTransaction);
 }

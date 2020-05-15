@@ -51,8 +51,9 @@ public class BuyService {
                   countryCode, storeAddress, oemAddress)))
         .map(transaction -> updateTransactionBuilderData(paymentTransaction,
         transaction)).flatMapCompletable(
-        payment -> Completable.defer(() -> transactionValidator.validate(payment))
-            .andThen(transactionService.sendTransaction(key, payment.getTransactionBuilder())));
+            payment -> Single.defer(() -> transactionValidator.validate(payment))
+                .flatMapCompletable(hash -> transactionService.sendTransaction(key,
+                    payment.getTransactionBuilder())));
   }
 
   public Observable<BuyTransaction> getBuy(String uri) {

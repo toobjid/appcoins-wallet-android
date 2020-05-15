@@ -44,7 +44,10 @@ public class InAppPurchaseService {
           if (allowance.compareTo(BigDecimal.ZERO) == 0) {
             return approveService.approve(key, paymentTransaction);
           } else if (difference >= 0) {
-            return Completable.complete();
+            //return Completable.complete();
+            //cache.save(key, paymentTransaction);
+            //cache.save(key, paymentTransaction);
+            return approveService.approveDummy(key, paymentTransaction);
           } else {
             PaymentTransaction approveWithZeroPaymentTransaction =
                 createApproveZeroTransaction(paymentTransaction);

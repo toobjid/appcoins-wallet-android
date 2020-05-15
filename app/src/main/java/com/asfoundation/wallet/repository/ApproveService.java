@@ -1,9 +1,16 @@
 package com.asfoundation.wallet.repository;
 
+import android.util.Log;
 import com.asfoundation.wallet.entity.TransactionBuilder;
 import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
 import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by trinkes on 3/16/18.
@@ -12,11 +19,15 @@ import java.util.List;
 public class ApproveService {
   private final WatchedTransactionService transactionService;
   private final TransactionValidator approveTransactionSender;
+  private final Map<String, Transaction> cenas;
+  private final PublishSubject<List<Transaction>> dummyTransactionsRelay;
 
   public ApproveService(WatchedTransactionService transactionService,
       TransactionValidator approveTransactionSender) {
     this.transactionService = transactionService;
     this.approveTransactionSender = approveTransactionSender;
+    this.cenas = new HashMap<>();
+    this.dummyTransactionsRelay = PublishSubject.create();
   }
 
   public void start() {
@@ -29,8 +40,8 @@ public class ApproveService {
 
   public Completable approve(String key, PaymentTransaction paymentTransaction) {
     return approveTransactionSender.validate(paymentTransaction)
-        .andThen(
-            transactionService.sendTransaction(key, paymentTransaction.getTransactionBuilder()));
+        .flatMapCompletable(hash -> transactionService.sendTransaction(key,
+            paymentTransaction.getTransactionBuilder()));
   }
 
   public Observable<ApproveTransaction> getApprove(String uri) {
@@ -85,18 +96,64 @@ public class ApproveService {
   }
 
   public Observable<List<ApproveTransaction>> getAll() {
-    return transactionService.getAll()
-        .flatMapSingle(transactions -> Observable.fromIterable(transactions)
-            .map(this::map)
-            .toList());
+    // Combine latest with dummy
+    // Status approved
+    // key, payment transaction como argumentos
+
+    //Observable<List<Transaction>> just = Observable.just(cenas);
+    Observable<List<Transaction>> just =
+        dummyTransactionsRelay.startWith(new LinkedList<Transaction>())
+            .doOnNext(transactions -> Log.d(TAG, "onNext cache: " + transactions));
+    Observable<List<Transaction>> all = transactionService.getAll()
+        .startWith(new LinkedList<Transaction>())
+        .doOnNext(transactions -> Log.d(TAG, "onNext transactionService.getAll: " + transactions));
+    Observable<List<Transaction>> combineLatest =
+        Observable.combineLatest(all, just, (transactions, transactions2) -> {
+          Log.d(TAG, "transactionService.getAll: " + transactions);
+          Log.d(TAG, "cache: " + transactions2);
+          List<Transaction> list = new LinkedList<>();
+          list.addAll(transactions);
+          list.addAll(cenas.values());
+
+          return list;
+        });
+    return combineLatest.flatMapSingle(transactions -> Observable.fromIterable(transactions)
+        .map(this::map)
+        .toList());
+    //return transactionService.getAll()
+    //    .flatMapSingle(transactions -> Observable.fromIterable(transactions)
+    //        .map(this::map)
+    //        .toList());
   }
 
+  private static final String TAG = ApproveService.class.getSimpleName();
+
   public Completable remove(String key) {
-    return transactionService.remove(key);
+    return transactionService.remove(key)
+        .andThen(Completable.fromAction(() -> {
+          cenas.remove(key);
+          ArrayList<Transaction> t = new ArrayList<>(cenas.values());
+          Log.d(TAG, "remove emmited list: " + t);
+          dummyTransactionsRelay.onNext(t);
+        }));
+  }
+
+  public CompletableSource approveDummy(String key, PaymentTransaction paymentTransaction) {
+    //new Transaction(key, Transaction.Status.COMPLETED, paymentTransaction.getTransactionBuilder
+    // (), "0x");
+    //return Completable.fromRunnable(() -> cenas.add(paymentTransaction));
+
+    return approveTransactionSender.validate(paymentTransaction)
+        .flatMapCompletable(hash -> Completable.fromRunnable(() -> cenas.put(key,
+            new Transaction(key, Transaction.Status.COMPLETED,
+                paymentTransaction.getTransactionBuilder(), hash)))
+            .andThen(Completable.fromRunnable(
+                () -> dummyTransactionsRelay.onNext(new ArrayList<>(cenas.values())))));
   }
 
   public enum Status {
-    PENDING, APPROVING, APPROVED, ERROR, WRONG_NETWORK, NONCE_ERROR, UNKNOWN_TOKEN, NO_TOKENS, NO_ETHER, NO_FUNDS, NO_INTERNET
+    PENDING, APPROVING, APPROVED, ERROR, WRONG_NETWORK, NONCE_ERROR, UNKNOWN_TOKEN, NO_TOKENS,
+    NO_ETHER, NO_FUNDS, NO_INTERNET
   }
 
   public class ApproveTransaction {

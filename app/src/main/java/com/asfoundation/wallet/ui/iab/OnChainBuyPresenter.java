@@ -57,12 +57,13 @@ public class OnChainBuyPresenter {
 
   public void present(String uriString, String appPackage, String productName, BigDecimal amount,
       String developerPayload) {
-    setupUi(amount, uriString, appPackage, developerPayload);
+    setupUi(uriString, appPackage, developerPayload, productName);
 
     handleOkErrorClick(uriString);
 
-    handleBuyEvent(appPackage, productName, developerPayload, isBds);
-  }
+    showTransactionState(uriString);
+
+    }
 
   private void showTransactionState(String uriString) {
     if (statusDisposable != null && !statusDisposable.isDisposed()) {
@@ -75,26 +76,14 @@ public class OnChainBuyPresenter {
         }, this::showError);
   }
 
-  private void handleBuyEvent(String appPackage, String productName, String developerPayload,
-      boolean isBds) {
-    showTransactionState(uriString);
-    disposables.add(
-        inAppPurchaseInteractor.send(uriString, AsfInAppPurchaseInteractor.TransactionType.NORMAL,
-            appPackage, productName, developerPayload, isBds)
-            .observeOn(viewScheduler)
-            .doOnError(this::showError)
-            .observeOn(networkScheduler)
-            .subscribe());
-  }
-
   private void handleOkErrorClick(String uriString) {
     disposables.add(view.getOkErrorClick()
         .flatMapSingle(__ -> inAppPurchaseInteractor.parseTransaction(uriString, isBds))
         .subscribe(click -> close(), throwable -> close()));
   }
 
-  private void setupUi(BigDecimal appcAmount, String uri, String packageName,
-      String developerPayload) {
+  private void setupUi(String uri, String packageName, String developerPayload,
+      String productName) {
     disposables.add(inAppPurchaseInteractor.parseTransaction(uri, isBds)
         .flatMapCompletable(
             transaction -> inAppPurchaseInteractor.getCurrentPaymentStep(packageName, transaction)
@@ -105,8 +94,12 @@ public class OnChainBuyPresenter {
                           AsfInAppPurchaseInteractor.TransactionType.NORMAL, packageName,
                           transaction.getSkuId(), developerPayload, isBds);
                     case READY:
-                      return Completable.fromAction(() -> setup(appcAmount))
-                          .subscribeOn(AndroidSchedulers.mainThread());
+                      return inAppPurchaseInteractor.send(uriString,
+                          AsfInAppPurchaseInteractor.TransactionType.NORMAL, appPackage,
+                          productName, developerPayload, isBds)
+                          .observeOn(viewScheduler)
+                          .doOnError(this::showError)
+                          .observeOn(networkScheduler);
                     case NO_FUNDS:
                       return Completable.fromAction(view::showNoFundsError)
                           .subscribeOn(viewScheduler);
